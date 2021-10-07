@@ -1,0 +1,56 @@
+\chapter{Introduction}
+In computational sciences and engineering, one often has to deal with very complex phenomena.
+In many cases, Partial Differential Equations (PDE) are used to model these complex problems.
+
+\subsubsection{Parametric Partial Differential Equations}
+PDEs are used to describe and solve problems in structural analysis, heat transfer, fluid flow, mass transport, or electromagnetic potential. 
+Popular methods to solve PDEs are finite difference method (FDM), finite element method (FEM), finite volume method (FV), and spectral element method (SEM). Usually, these high order methods have a high computational cost and are mostly computed on distributed and parallel systems like HPC supercomputers.
+In many cases, the PDE depends on parameters, then we are talking about parametric PDEs.
+The problem with parametric PDEs is that we have to solve the PDE for every parameter of interest using a high order method. 
+This leads to a high computational cost and a long evaluation time of the model.
+For the fast evaluation of parametric PDEs we can make use of Reduced Order Methods.
+
+\subsubsection{Reduced Order Methods}
+%belong to the category
+Reduced Order Methods (ROMs) are a category of methods and techniques used to reduce PDE's complexity.
+Models with reduced complexity can be evaluated more efficient than high order models.
+The fast evaluation of parametric PDEs can be of high interest in many fields of science and industry, when it comes to optimizing or controlling the parameter or using them in real-time systems.
+For example, ROMs are used in Computational Fluid Dynamic (CFD), in environmental sciences \cite{StrazzulloBallarinMosettiRozza2017}, in control problems over dynamical systems \cite{quarteroni2007reduced} and in problems with applications in finance.
+
+Reduced basis (RB) methods are projection-based model order reduction techniques for reducing the computational complexity of solving parametric partial differential equation problems.
+RB methods project the problem from a high dimensional space onto a low dimensional reduced space.
+Common methods to compute these reduced spaces are the greedy algorithm and the Proper Orthogonal Decomposition.
+
+The reduced problems created with RB methods have much less computational cost in comparison to full order methods. An HPC supercomputer is no longer needed. The reduced models can be computed on less powerful hardware like a laptop or even on smartphones or tablets.
+
+\subsubsection{Proper Orthogonal Decomposition}
+In this work, we will focus on the creation of a reduced basis using the Proper Orthogonal Decomposition (POD).
+The POD is also known as Karhunen–Loève decomposition (KL) or Principal component analysis (PCA).
+It is well known in the analysis of turbulent flow \cite{holmes_lumley_berkooz_1996}, but can also be used to create a reduced basis.
+
+The basic idea of the POD is to extract the dominant information of a given data set using eigenvalue decomposition or singular value decommission. And then use the most dominant information to create the reduced space.
+In most reduced-order modeling frameworks, the computation of the POD is done in serial even though the snapshots are computed on distributed and parallel systems like HPC supercomputers.
+This leads to being the bottle-neck in many reduced order modeling frameworks.
+This bottle-neck can be resolved with a parallel implementation.
+
+We present two different methods to compute the POD in a parallel way.
+One method is based on the singular value decomposition and was presented by Kunisch and Volkwein in 2007 \cite{parapod}.
+The second method is based on solving the eigenvalue problem of the correlation matrix.
+
+These two methods are implemented in parallel, and benchmarks of the parallel implementation are done on an HPC supercomputer.
+
+\subsubsection{Reduced Order Modeling Framework}
+
+Based on these benchmarks, we choose the best method and integrate it into the EZyRB (Easy Reduced Basis method) package \cite{demo18ezyrb}.
+EZyRB is an open-source python package for data-driven model order reduction.
+Due to the modular structure of EZyRB it can be used in computational pipeline with model order reduction for industrial and applied mathematics \cite{Pipeline}. 
+
+EZyRB is a serial software for data-driven model order reduction. Using it in a computational pipeline, it computes a reduced model after high order solvers compute the data for the reduction.
+Usually, the high order solvers are able to make use of an HPC supercomputer.
+With a parallel POD algorithm, EZyRB is also able to make use of these resources.
+
+
+
+
+
+

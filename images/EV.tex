@@ -1,0 +1,46 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.521in,
+height=3.566in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=0.25,
+xmax=8.25,
+xlabel style={font=\color{white!15!black}},
+xlabel={POD modes},
+ymin=0,
+ymax=950,
+ylabel style={font=\color{white!15!black}},
+ylabel={},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+legend style={at={(0.97,0.97)}, anchor=north east, legend cell align=left, align=left, draw=white!15!black}
+]
+
+\addplot [color=mycolor1, mark=+, mark options={solid, mycolor1, scale=2}]
+table[row sep=crcr]{%
+	1	874.5893 \\
+	2	58.1832  \\
+	3	48.2328  \\
+	4	45.9105  \\
+	5	35.5212  \\
+	6	23.8663  \\
+	7	20.6150  \\
+	8	15.4926  \\
+};
+%\addlegendentry{Eigen values}
+
+\end{axis}
+\end{tikzpicture}%

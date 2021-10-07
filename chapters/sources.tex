@@ -1,0 +1,354 @@
+\chapter{Appendix}
+\section{POD module in C for Python}
+\label{list:cPODpython}
+
+The MPI wrapper is taken from \cite{DALCIN20051108}:\\
+\href{https://bitbucket.org/mpi4py/mpi4py/src/73129d2c792291a735c47bca51684ae1d524a4aa/demo/wrap-c/?at=master}
+{https://bitbucket.org/mpi4py/mpi4py/src/ \\73129d2c792291a735c47bca51684ae1d524a4aa/demo/wrap-c/?at=master}
+
+We extended a numpy wrapper and included the POD algorithm.
+
+\begin{lstlisting}
+
+#define MPICH_SKIP_MPICXX 1
+#define OMPI_SKIP_MPICXX  1
+#include <Eigen/Dense>
+#include <mpi4py/mpi4py.h>
+#include "arrayobject.h"
+
+using namespace Eigen;
+typedef Matrix<double, -1, -1, RowMajor> Mat;
+/* - Hybrid POD algorithem ------------------------------------------------- */
+
+static void
+master(MPI_Comm comm, PyArrayObject *wmatrix, PyArrayObject *umatrix) {
+	
+	if (comm == MPI_COMM_NULL) {
+		printf("You passed MPI_COMM_NULL !!!\n");
+		return;
+	}
+	// MPI: Who am i and how many
+	int size; MPI_Comm_size(comm, &size);
+	int rank; MPI_Comm_rank(comm, &rank);
+	
+	// Pointer to allocated Snapsotmatrix
+	double * W = (double *)wmatrix->data;
+	// Pinter to allocated POD vectors
+	double * U = (double *)umatrix->data;
+	
+	// get dimention from numpy object
+	int m,n;
+	m = PyArray_DIM(wmatrix, 0);
+	n = PyArray_DIM(wmatrix, 1);
+	
+	// allocate correlation matrix
+	Mat CORR(n,n);
+	
+	// brodcast dimentions to all processors
+	MPI_Bcast(&m, 1, MPI_INT, 0, comm);
+	MPI_Bcast(&n, 1, MPI_INT, 0, comm);
+	
+	// calculate block sizes
+	int nofrows = m / size;
+	int remainder = m % size;
+	if (rank < remainder) ++nofrows;
+	
+	int counts[size]; int displs[size];
+	
+	int offset = 0;
+	for (int i = 0; i < size; ++i) {
+		displs[i] = offset; 
+		counts[i] = m / size;
+		if (i < remainder) ++counts[i];
+		
+		counts[i] *= n; 
+		offset += counts[i];
+	}
+	
+	
+	// initiate Self Adjoint Eigen Problem Solver
+	Eigen::SelfAdjointEigenSolver<Mat> es;
+	
+	// allocate local matrices
+	Mat w(nofrows, n);
+	Mat sv(n,n);
+	
+	// Scatter snapshots
+	MPI_Scatterv( W , counts , displs , MPI_DOUBLE ,
+	w.data(), nofrows*n , MPI_DOUBLE ,
+	0 , comm  );
+	
+	// compute local correaltion matrix
+	Mat corr(n,n);
+	corr.noalias() = w.transpose() * w; 
+	
+	// compute global correlation matrix
+	MPI_Reduce(corr.data(), CORR.data(), n*n, MPI_DOUBLE,
+	MPI_SUM, 0, comm);
+	
+	
+	// solve eigenlvlaue problem
+	es.compute(CORR);
+	// work = V * S^-1
+	sv = es.eigenvectors().rowwise().reverse().leftCols(n);
+	for(int i=0; i<sv.cols(); i++){
+		sv.col(i) *= 1.0/sqrt(es.eigenvalues().reverse().head(n)[i]);
+	}
+	
+	// brodcast sv matrix
+	MPI_Bcast(sv.data(), n*n, MPI_DOUBLE, 0, comm);
+	
+	// compute local pod vectors
+	Mat u; 
+	u.noalias() = w * sv; 
+	
+	// gather pod vectors
+	MPI_Gatherv( u.data() , nofrows*n , MPI_DOUBLE , 
+	U, counts ,  displs , MPI_DOUBLE ,
+	0 , comm  );
+	
+	return;
+}
+
+static void
+worker(MPI_Comm comm) {
+	
+	if (comm == MPI_COMM_NULL) {
+		printf("You passed MPI_COMM_NULL !!!\n");
+		return;
+	}
+	
+	// MPI: Who am i and how many
+	int size; MPI_Comm_size(comm, &size);
+	int rank; MPI_Comm_rank(comm, &rank);
+	
+	// brodcast dimentions to all processors
+	int m,n;	
+	MPI_Bcast(&m, 1, MPI_INT, 0, comm);
+	MPI_Bcast(&n, 1, MPI_INT, 0, comm);
+	
+	// calculate block sizes
+	int nofrows = m / size;
+	int remainder = m % size;
+	if (rank < remainder) ++nofrows;
+	
+	int counts[size]; int displs[size];
+	
+	// allocate local matrices
+	Mat w(nofrows, n);
+	Mat sv(n,n);
+	
+	// recive local snapshots
+	MPI_Scatterv( NULL , counts , displs , MPI_DOUBLE ,
+	w.data(), nofrows*n , MPI_DOUBLE ,
+	0 , comm  );
+	
+	// compute local correaltion matrix
+	Mat corr(n,n);
+	corr.noalias() = w.transpose() * w; 
+	
+	// compute global correlation matrix	
+	MPI_Reduce(corr.data(), NULL, n*n, MPI_DOUBLE,
+	MPI_SUM, 0, comm);
+	
+	// recive sv
+	MPI_Bcast(sv.data(), n*n, MPI_DOUBLE, 0, comm);
+	
+	// compute local correlation matrix
+	Mat u; 
+	u.noalias() = w * sv; 
+	
+	//send local pod vecotrs
+	MPI_Gatherv( u.data() , nofrows*n , MPI_DOUBLE , 
+	NULL , counts ,  displs , MPI_DOUBLE ,
+	0 , comm  );
+	
+	return;
+}
+
+/* - python wrapper functions-------------------------------------------- */
+
+// Master Function called by python
+static PyObject *
+parapod_master(PyObject *self, PyObject *args)
+{
+	PyObject *py_comm;
+	MPI_Comm *comm_p;
+	PyArrayObject *wmatrix;
+	PyArrayObject *umatrix;
+	
+	if (!PyArg_ParseTuple(args, "OOO:master", &py_comm, &wmatrix, &umatrix)) return NULL;
+	
+	comm_p = PyMPIComm_Get(py_comm);
+	if (comm_p == NULL) return NULL;
+	
+	master(*comm_p, wmatrix, umatrix);
+	
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+// Worker Function called by python
+static PyObject *
+parapod_worker(PyObject *self, PyObject *args)
+{
+	PyObject *py_comm;
+	MPI_Comm *comm_p;
+	
+	if (!PyArg_ParseTuple(args, "O:worker", &py_comm)) return NULL;
+	
+	comm_p = PyMPIComm_Get(py_comm);
+	if (comm_p == NULL) return NULL;
+	
+	worker(*comm_p);
+	
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static struct PyMethodDef parapod_methods[] = {
+	{"master",   (PyCFunction)parapod_master,   METH_VARARGS, NULL},
+	{"worker",   (PyCFunction)parapod_worker,   METH_VARARGS, NULL},
+	{NULL,       NULL,                     0,            NULL} /* sentinel */
+};
+
+#if PY_MAJOR_VERSION < 3
+/* --- Python 2 --- */
+
+PyMODINIT_FUNC initparapod_module(void)
+{
+	PyObject *m = NULL;
+	
+	/* Initialize mpi4py C-API */
+	//if (import_mpi4py() < 0) goto bad;
+	if (import_mpi4py() < 0) return;
+	
+	/* Module initialization  */
+	m = Py_InitModule("parapod", parapod_methods);
+	if (m == NULL) goto bad;
+	
+	return;
+	
+	//bad:
+	//return;
+}
+
+#else
+/* --- Python 3 --- */
+
+static struct PyModuleDef parapod_module = {
+	PyModuleDef_HEAD_INIT,
+	"parapod", /* m_name */
+	NULL,         /* m_doc */
+	-1,           /* m_size */
+	parapod_methods    /* m_methods */,
+	NULL,         /* m_reload */
+	NULL,         /* m_traverse */
+	NULL,         /* m_clear */
+	NULL          /* m_free */
+};
+
+PyMODINIT_FUNC
+PyInit_parapod(void)
+{
+	PyObject *m = NULL;
+	
+	/* Initialize mpi4py's C-API */
+	if (import_mpi4py() < 0) return NULL;
+	
+	/* Module initialization  */
+	m = PyModule_Create(&parapod_module);
+	if (m == NULL) return NULL;
+	
+	return m;
+}
+
+#endif
+\end{lstlisting}
+
+\section{Waiting time BS 330}
+\label{list:WTimeBS330}
+\begin{lstlisting}
+nodes=80 dofs=1000000 snapshots=300 bs=330
+rank = 12  min = 0.0043131 max = 0.0249866
+rank = 13  min = 0.0046517 max = 0.0242660
+rank = 14  min = 0.0044078 max = 0.0240446
+rank = 15  min = 0.0047344 max = 0.0241300
+rank = 3   min = 0.0018230 max = 0.0247925
+rank = 16  min = 0.0047779 max = 0.0245413
+rank = 0   min = 0.0077286 max = 0.0135336
+rank = 2   min = 0.0028240 max = 0.0250917
+rank = 1   min = 0.0013872 max = 0.0214948
+rank = 4   min = 0.0031843 max = 0.0247981
+rank = 5   min = 0.0009631 max = 0.0252511
+rank = 6   min = 0.0028348 max = 0.0271796
+rank = 7   min = 0.0022160 max = 0.0245563
+rank = 8   min = 0.0042824 max = 0.0255985
+rank = 9   min = 0.0025902 max = 0.0258349
+rank = 10  min = 0.0042816 max = 0.0229909
+rank = 11  min = 0.0041316 max = 0.0235578
+rank = 17  min = 0.0047368 max = 0.0243006
+rank = 18  min = 0.0046265 max = 0.0246917
+rank = 19  min = 0.0046437 max = 0.0271941
+rank = 30  min = 0.0076763 max = 0.0314391
+rank = 31  min = 0.0044388 max = 0.0293830
+rank = 32  min = 0.0047194 max = 0.0298569
+rank = 33  min = 0.0081659 max = 0.0307738
+rank = 34  min = 0.0043481 max = 0.0297940
+rank = 35  min = 0.0094767 max = 0.0307792
+rank = 23  min = 0.0022570 max = 0.0297334
+rank = 20  min = 0.0018981 max = 0.0291365
+rank = 21  min = 0.0007308 max = 0.0275428
+rank = 22  min = 0.0021548 max = 0.0276729
+rank = 24  min = 0.0015231 max = 0.0311961
+rank = 25  min = 0.0076888 max = 0.0296880
+rank = 26  min = 0.0040453 max = 0.0311608
+rank = 27  min = 0.0068116 max = 0.0312140
+rank = 28  min = 0.0086282 max = 0.0316162
+rank = 29  min = 0.0094516 max = 0.0294205
+rank = 43  min = 0.0130634 max = 0.0232435
+rank = 40  min = 0.0133841 max = 0.0241305
+rank = 41  min = 0.0130425 max = 0.0254509
+rank = 42  min = 0.0130218 max = 0.0256491
+rank = 44  min = 0.0099885 max = 0.0290970
+rank = 45  min = 0.0108420 max = 0.0290336
+rank = 46  min = 0.0109732 max = 0.0285007
+rank = 47  min = 0.0099189 max = 0.0284578
+rank = 48  min = 0.0117451 max = 0.0279839
+rank = 49  min = 0.0104234 max = 0.0286017
+rank = 50  min = 0.0143602 max = 0.0229421
+rank = 51  min = 0.0119498 max = 0.0275804
+rank = 52  min = 0.0143473 max = 0.0228536
+rank = 53  min = 0.0126253 max = 0.0269693
+rank = 54  min = 0.0135484 max = 0.0262195
+rank = 63  min = 0.0137158 max = 0.0233905
+rank = 55  min = 0.0146116 max = 0.0235405
+rank = 60  min = 0.0136492 max = 0.0233761
+rank = 58  min = 0.0133206 max = 0.0265307
+rank = 56  min = 0.0135418 max = 0.0278898
+rank = 59  min = 0.0136631 max = 0.0282376
+rank = 57  min = 0.0135731 max = 0.0291565
+rank = 61  min = 0.0136313 max = 0.0282906
+rank = 62  min = 0.0134978 max = 0.0237248
+rank = 64  min = 0.0143792 max = 0.0231585
+rank = 65  min = 0.0138563 max = 0.0283055
+rank = 66  min = 0.0148908 max = 0.0268243
+rank = 67  min = 0.0145527 max = 0.0234873
+rank = 68  min = 0.0142011 max = 0.0237200
+rank = 69  min = 0.0144420 max = 0.0284821
+rank = 70  min = 0.0144735 max = 0.0238491
+rank = 71  min = 0.0141707 max = 0.0241045
+rank = 72  min = 0.0143723 max = 0.0287977
+rank = 73  min = 0.0142900 max = 0.0239163
+rank = 74  min = 0.0145044 max = 0.0242005
+rank = 75  min = 0.0143538 max = 0.0241516
+rank = 79  min = 0.0136074 max = 0.0283309
+rank = 76  min = 0.0133768 max = 0.0282639
+rank = 77  min = 0.0136647 max = 0.0295025
+rank = 78  min = 0.0135516 max = 0.0255812
+rank = 36  min = 0.0127170 max = 0.0241173
+rank = 37  min = 0.0110443 max = 0.0255328
+rank = 38  min = 0.0128222 max = 0.0243029
+rank = 39  min = 0.0128500 max = 0.0239090
+\end{lstlisting}

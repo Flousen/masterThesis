@@ -1,0 +1,52 @@
+\begin{frame}{Reduced Basis Method}
+	\Large{\highlightB{RB workflow}}
+	\normalsize
+	\vspace{5mm}
+	\begin{figure}
+		\input{../images/PED2RB} 
+	\end{figure}
+
+	\begin{align*}
+	\text{find }u(\mu) \in \mathbb{X} :\quad a(u(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}.
+	\end{align*}
+		
+\end{frame}
+
+\begin{frame}{Reduced Basis Method}
+	\Large{\highlightB{Truth problem}}
+	\normalsize
+	\begin{align*}
+	\text{find }u^\mathcal{ N }(\mu) \in \mathbb{X^\mathcal{ N }} :\quad a(u^\mathcal{ N }(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X^\mathcal{ N }}.
+	\end{align*}
+	\Large{\highlightB{Truth solutions}}
+	\begin{align*}
+	u^\mathcal{ N }(\mu) = \sum_{i=1}^{\mathcal{ N }} u_{i}^\mathcal{ N }(\mu) \cdot \varphi_i,  \quad   \mathbb{X^\mathcal{ N }} = \text{span}(\varphi_1, ...,  \varphi_\mathcal{ N })
+	\end{align*}
+	\Large{\highlightB{Goal: Approximate solution manifold}}\\
+	\begin{align*}
+	\mathbb{M^\mathcal{N}} = \{u^\mathcal{N}(\mu),\quad \mu \in \mathbb{P}\}
+	\end{align*}
+	
+\end{frame}
+
+\begin{frame}{Reduced Basis Method}
+	\Large{\highlightB{Reduced Space}}
+	
+	\begin{align*}
+	\mathbb{X}_N = \text{span}(\xi_1, ..., \xi_N), \qquad N \ll \mathcal{ N } 
+	\end{align*}
+	\Large{\highlightB{Reduced solutions}}
+	\begin{align*}
+	u_N (\mu) = \sum_{i=1}^{ N } u_{N,i}(\mu) \cdot \xi_i
+	\end{align*}
+	
+	\Large{\highlightB{Reduced problem}}
+	\normalsize
+	\vspace{0.5cm}
+	\begin{align*}
+	\text{find }u_N(\mu) \in \mathbb{X}_N :\quad a(u_N(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}_N
+	\end{align*}
+	
+	
+\end{frame}
+

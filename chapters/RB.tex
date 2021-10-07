@@ -1,0 +1,364 @@
+\chapter{Reduced Basis Method}
+In this chapter, we give an overview on reduced basis (RB) methods. 
+RB methods are used when we are interested in efficient solutions of the same parametric PDE for different parameters.
+This can be the case in multi-queries applications like optimization or in real-time applications.
+
+The workflow of RB methods can be divided into two phases, the offline-phase and the online-phase.
+
+\begin{enumerate}
+	\item In the offline-phase, we create a reduced model of the parametric PDE. 
+	To create this reduced model we need so called truth solutions. These truth solutions are very good approximations of the exact solutions. We assume that the approximation is sufficiently good so that we can call them truth solutions.
+	We create the truth solutions using a discretization technique. Finite Element (FEM) and Finite Volume (FV) are popular discretization techniques to compute the truth solutions.
+	The most commonly used software packages by the scientific community are FEniCS \cite{LoggMardalEtAl2012} for FEM and OpenFOAM \cite{articleOpenFOAM} for FVM.
+	These truth solutions have a high computational cost and they are usually calculated on a HPC supercomputer.	
+	The truth solutions are used to create the reduced model. In this chapter we will describe how to create a reduced model using the proper orthogonal decomposition.
+
+	\item In the online-phase, we solve the reduced model that we created in the offline-phase.
+	This reduced problem requires much lower computational cost with respect to the previous phase. Solving the reduced problem can be done on less powerful hardware like a laptop, tablet, or smartphone.
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\input{images/PED2RB}
+	\caption[RB process]{Sketch of the RB workflow. Starting from the exact solution of the PDE $u(\mu)$.
+		Then the offline-phase, where we are creating snapshot solution $u^\mathcal{ N }(\mu)$ in the truth space $\mathbb{X}^\mathcal{ N }$ using FEM or FV.
+		And finally, in the online-phase where we are computing reduced solutions $u_N(\mu)$ in the RB space $\mathbb{X}_N$.}
+	\label{fig:scetch}
+\end{figure}
+
+Before we start, a view remarks to the notation.
+Everything associated with the exact solution has no indices.
+Everything associated with the truth space has a superscripted calligraphic $\mathcal{ N }$ $\left(\cdot^\mathcal{ N }\right)$.
+Everything associated with the RB space has a subscripted normal $N \left(\cdot_N\right)$.
+
+We start with the weak formulation of a parametric PDE
+\begin{align}
+\text{find }u(\mu) \in \mathbb{X} :\quad a(u(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}.
+\label{eq:weakform}
+\end{align}
+
+Where$\mathbb{X}$ is a Hilbert space in which we search for the solution,
+$\mu \in \mathbb{R}^n$ is the parameter vector containing all the parameters that describe our parametrized PDE,
+$a(\cdot,\cdot,\mu)$ is a parametric bilinear form containing the equation describing the physics,
+$f(\cdot,\mu)$ is a parametric linear form containing the source term on the right-hand side and
+$u(\mu)\in \mathbb{X}$ is the exact solution depending on $\mu$.
+
+In a weak formulation, an equation is no longer required to be well defined and has instead weak solutions only with respect to certain "test functions". This is equivalent to formulating the problem to require a solution in the sense of a distribution.
+In Section \ref{sec:HeatConduction} we make an example of the weak formulation for the heat equation.
+
+The exact solution is not available in most cases, so first we need to approximate the solution as good as possible.
+Because the Hilbert spaces are usually $ \infty $-dimensional, we need a sufficient fine discretization.
+FEM and FV are popular discretization techniques to compute the solutions.
+We call solutions, which are computed by these methods truth solutions.
+
+These methods discretise  the  $ \infty $-dimensional space by choosing a finite number of basis functions $\{ \varphi_i^\mathcal{ N } \}_{i=1}^{\mathcal{ N }} \in \mathbb{X}$.
+The basis functions $\varphi_i^\mathcal{ N }$ span the truth space
+$\mathbb{X}^\mathcal{ N } = \text{span} \{ \varphi_1^\mathcal{ N }, ..., \varphi_\mathcal{N}^\mathcal{N}  \} \subset{X} $.
+The choice of these basis functions depends on the discretization technique. 
+The truth solutions are denoted with  $u^\mathcal{N}(\mu)$ where $\mathcal{N}$ stands for the degrees of freedom of the high fidelity solution.
+The truth solution can be represented as a linear combination of basis functions
+\begin{align}
+\label{eq:truthSolution}
+u^\mathcal{ N } (\mu) = \sum_{i=1}^\mathcal{ N } u_i^\mathcal{ N } (\mu) \cdot \varphi_i^\mathcal{ N },
+\end{align}
+where $ u_i^\mathcal{ N } (\mu)$ are coefficients that scale the basis functions in the linear combination.
+Using the discretization, the truth problem can now be written as
+\begin{align}
+\label{eq:truthProblem}
+\text{find }u^\mathcal{N}(\mu) \in \mathbb{X}^\mathcal{N} :\quad a(u^\mathcal{N}(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}^\mathcal{N}.
+\end{align}
+
+
+Using the discrete basis functions, the truth problem (\ref{eq:truthProblem}) leads to the discrete system 
+\begin{align*}
+\underline{A}^\mathcal{ N } (\mu) \underline{u}^\mathcal{ N } (\mu) = 
+\underline{f}^\mathcal{ N }(\mu),
+\end{align*}
+with:
+\begin{itemize}
+	\item The stiffness matrix $\mathbf{A}^\mathcal{ N } (\mu) = [a(\varphi_i,\varphi_j,\mu)]_{i=1,...,\mathcal{N}}$ 
+	\item The right hand side vector $\underline{f}^\mathcal{ N } (\mu) = [f(\varphi_j,\mu)]_{j=1,...,\mathcal{N}}$
+	\item The solution vector $\underline{u}^\mathcal{ N } (\mu) = [u_i^\mathcal{ N }(\mu)]_{i=1,...,\mathcal{N}}$ containing  the coefficients $u_i^\mathcal{ N } (\mu)$. 
+\end{itemize}
+
+We define the discrete solution manifold
+\begin{align*}
+\mathbb{M^\mathcal{N}} = \{u^\mathcal{N}(\mu),\quad \mu \in \mathbb{P}\}.
+\end{align*}
+as the set of all truth solution varying the parameter.
+
+In many cases it is too expensive to compute a truth solution for all parameters we are interested in.
+The aim of RB methods is to approximate the solution manifold as good as possible but also efficiently.
+
+The idea is to provide a projection to the manifold on low dimensional space using a small number of basis functions $\{\xi_i\}_{i=1}^{N}$.
+
+A small number means that the number of basis functions is a lot smaller than the degrees of freedom of the high fidelity solution $N \ll \mathcal{ N }$.
+The basis function spans the RB space $ \mathbb{X}_N = \text{span}(\xi_1, ...,\xi_N )\subset \mathbb{X}^\mathcal{ N } $.
+Compared to (\ref{eq:truthSolution}) for the reduced solution, we want to use $N$ basis functions from the reduced basis instead of $\mathcal{ N }$ basis functions from the truth basis.
+The reduced solutions are defined as a linear combination of reduced basis functions
+\begin{align*}
+u_N(\mu) = \sum_{i=1}^{N} u_{N,i}(\mu) \xi_i,
+\end{align*}
+where $ u_{N,i}(\mu)$ are the coefficients of the reduced system.
+
+The reduced basis functions are build as a linear combination of truth basis functions
+\begin{align}
+\label{eq:basisfun}
+\xi_i  = \sum_{k=1}^{\mathcal{ N }} b_{k,i} \varphi_k^\mathcal{ N },
+\end{align}
+with the coefficients  $b_{k,i}$. These coefficients are stored in the matrix $B \in \mathbb{R}^{\mathcal{ N } \times N}$. The $i$-th column of $B$ contains the coefficients for the $i$-th basis function $\xi_i$ \cite[Section 3.1]{HRSbook}.
+A way to compute this basis, respectively the coefficients $b_{k,i}$, is the proper orthogonal decomposition (POD).
+The POD will be described in detail in Section \ref{sec:POD}. 
+
+Using the reduced basis functions, we can create the reduced system
+\begin{align*}
+\mathbf{A}_N (\mu) \underline{u}_N (\mu) = \underline{f}_N(\mu)
+\end{align*}
+with:
+\begin{itemize}
+	\item The reduced stiffness matrix $\mathbf{A}_N (\mu) = [a( \xi_i , \xi_j  ; \mu )]_{i,j=1,...,N}$
+	\item The reduced right hand side vector $\underline{f}_N (\mu) = [f(\xi_j ; \mu)]_{j=1,...,N}$
+	\item The solution vector $\underline{u}_N (\mu) = [ u_{N,i}(\mu) ]_{i=1,...,N}$ containing the coefficients $u_{N,i}(\mu)$
+\end{itemize}
+To compute the reduced stiffness matrix $\mathbf{A}_N (\mu)$ we insert the reduced basis functions into the bilinear form $a( \xi_i , \xi_j,  \mu )$.  
+Since it is a bilinear form, we are able to write it as
+\begin{align*}
+a( \xi_i , \xi_j,  \mu ) =
+\sum_{k=1}^{\mathcal{ N }} \sum_{l=1}^{\mathcal{ N }} b_{i,k} b_{j,l} a( \varphi_i , \varphi_j ;  \mu ).
+\end{align*}
+Computing this for every given $\mu$ would be a very high computational effort.
+We assume the bilinear form $a(\cdot, \cdot, \mu)$ is affine in the parameter. Which means we can decompose it in functions $\theta_a^q(\mu)$ containing the parameter $\mu$ and bilinear forms $a^q( \varphi_i , \varphi_j )$ independent from the parameter.
+We call this the affine decomposition 
+\begin{align}
+\label{eq:afdecomp}
+a( \xi_i , \xi_j,  \mu ) =
+\sum_{q=1}^{Q_a} \theta_a^q(\mu) \sum_{k,l=1}^{\mathcal{ N }} b_{i,k} b_{j,l} a^q( \varphi_i , \varphi_j ).
+\end{align}
+An example of such an affine decomposition is done in Section \ref{sec:HeatConduction}.
+The last sum in (\ref{eq:afdecomp}) is independent from $\mu$ and can be computed in the offline phase. It can be written in matrix form
+\begin{align*}
+\mathbf{A}_N^q  = \mathbf{B}^T \mathbf{A}^{\mathcal{ N },q} \mathbf{B},
+\end{align*}
+where the matrices $\mathbf{A}^{\mathcal{ N },q}$ are the parameter independent parts of the truth system. With this operation we project the coefficients of the truth system into the reduced space.  
+The same is done for the right hand side part $\underline{f}_N^q = \mathbf{B}^T  \underline{f}^{\mathcal{ N },q}$.
+
+
+$  \mathbf{A}_N (\mu) $ and $ \underline{f}_N (\mu) $ can be build efficiently in the online phase
+\begin{align*}
+\mathbf{A}_N (\mu) = \sum_{q=1}^{Q_a} \theta_a^q(\mu) \mathbf{A}_N^q,
+\qquad \qquad 
+\underline{f}_N (\mu) = \sum_{q=1}^{Q_f} \theta_f^q(\mu) \underline{f}_N^q.
+\end{align*}
+
+
+If there exists no affine decomposition, use Discrete Empirical Interpolation (DEIM) \cite[Chapter 5]{HRSbook}. More about DEIM can be found in \cite{DEIM}.
+
+
+
+
+%\begin{align}
+%\text{find }u_N(\mu) \in \mathbb{X}_N     : a(u_N(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}_N
+%\end{align}
+
+The reduced solution should be approximately equal $u_N(\mu) \approx  u^\mathcal{N}(\mu)$ to the truth solution. Of course, there will be an error.
+In this work, we will not go more in-depth on errors and error estimators.
+
+The primary motivation of this work is to provide a parallel version of the POD.
+In the offline-phase, the high fidelity solutions are usually computed on a supercomputer. 
+Despite POD algorithm usually has negligible computational cost, in many different distributed and parallel systems it may become the bottle-neck.
+The proposed parallel implementation enables the exploitation of HPC supercomputers for both, POD computation and the truth solutions.
+
+
+\newpage
+\section{Proper Orthogonal Decomposition}
+\label{sec:POD}
+
+In this Section, we present the Proper Orthogonal Decomposition (POD), the numerical method adopted to extract the reduced basis in this thesis.
+POD is a widespread approach in RB community.
+
+Theoretically, we could determine an optimal space by solving an optimization problem. 
+In most cases, this is very hard or impossible.
+Therefore, strategies based on training sets are used.
+The POD is such a strategy.
+
+We define the set of all training parameters $ \mathbb{P}_{train} = \{\mu_1^{train}, ..., \mu_{n_{train}}^{train}\} $ with $n_{train}$, the number of training parameters and  the space containing all solutions $ \mathbb{X}_{train} := \text{span} \{u(\mu^{train}): \mu^{train} \in \mathbb{P}_{train}\} $.
+
+The POD space $\mathbb{X}_{N}$ is defined in \cite[Section 3.2.1 (3.8)]{HRSbook} as:
+\begin{align}
+\label{eq:PODspace}
+\mathbb{X}_{N} := 
+\arginf_{ \mathbb{X}_N \subset \mathbb{X}_{train} } 
+\sqrt{ 
+	\frac{1}{ n_{train} } 
+	\sum_{ \mu \in \mathbb{P}_{train} }   
+	\inf_{ w_N \in \mathbb{X}_N } \| u^\mathcal{N}(\mu) - w_N \|_\mathbb{X}^2 
+}.
+\end{align}
+The expression $\inf_{ w_N \in \mathbb{X}_N } \| u^\mathcal{N}(\mu) - w_N \|_\mathbb{X}^2 $ describes the error we make representing the truth solution $u^\mathcal{N}(\mu)$ with functions out of the POD space $w_N \in \mathbb{X}_N$.
+Then this error is summed up for all parameters in the training set. 
+The POD space is defined as the space that minimizes the sum of errors.
+
+We search the POD space $\mathbb{X}_{N}$ as an $N$-dimensional subspaces of $ \mathbb{X}_{train} $.
+Because  $ \mathbb{X}_{train} $  is spanned by the truth solutions, the POD basis functions are defined as linear combinations of the truth solutions
+\begin{align}
+	\label{eq:PODfunc}
+	\xi_i = 
+	\frac{1}{\sqrt{\lambda_{i}}} 
+	\sum_{n=1}^{n_{train}} 
+	v_{n,i} 
+	u^\mathcal{ N }(\mu_{n}),	
+\end{align}
+with the coefficients $v_{n,i}$.
+The functions $\xi_i$ span the POD space
+$ \mathbb{X}_{N} := \text{span}\{ \xi_i : 1\leq i \leq N \} \subset \mathbb{X}_{train}$
+
+To find the functions $\xi_i$ that are  spanning a space $\mathbb{X}_{N}$ that fulfills the $\arginf_{ \mathbb{X}_N \subset \mathbb{X}_{train} }$ requirement of (\ref{eq:PODspace}), in \cite[Section 3.2.1]{HRSbook} and \cite[Section 3.1]{GalerkingPOD} the symmetric and linear operator
+\begin{align*}
+C(v) =
+\frac{1}{n_{train}}
+\sum_{m=1}^{n_{train}} 
+( v ,u^\mathcal{N}(\mu_{m}) )_\mathbb{X} u^\mathcal{N}(\mu_{m}) 
+, \quad 
+v \in \mathbb{X}_{N}.
+\end{align*}
+is defined.
+Solving the eigenvalue problem of this operator 
+\begin{align}
+\label{eq:evpfunk}
+\left(C(\xi_n),u^\mathcal{N}(\mu_{m})\right)_\mathbb{X}
+=
+\lambda_n(\xi_n,u^\mathcal{N}(\mu_{m}))_\mathbb{X}
+, \quad 
+1 \leq m \leq n_{train},
+\end{align}
+gives us the eigenvalue-eigenfunction pairs $(\lambda_{n},\xi_n)$. These eigenfunctions span the space $\mathbb{X}_{N}$ that derive the optimality conditions for the optimization problem (\ref{eq:PODspace}) \cite{GalerkingPOD, Volkwein2001}.
+
+Because we are computing the POD basis functions solving an eigenvalue problem, these functions are orthogonal. This is a big advantage of the POD.
+
+We further assume that eigenvalues are in decending order $\lambda_1 \leq \lambda_2 \leq \hdots \leq \lambda_{n_{train}}$.
+Then for the POD error, it applies that it is equal to the sum of the smallest eigenvalues \cite{GalerkingPOD}:
+\begin{align}
+\label{eq:PODerror}
+\epsilon_N^{POD}
+=
+\frac{1}{n_{train}}
+\sum_{ \mu \in \Xi_{train} }   
+\inf_{ w_N \in \mathbb{X}_N } \| u^\mathcal{N}(\mu) - w_N \|_\mathbb{X}^2 
+=
+\sum_{n=N+1}^{n_{train}}\lambda_{n}.
+\end{align}
+We can truncate $N$ smallest eigenvalues so that $\epsilon_l^{POD}$ is less than a given error boundary.
+That we can state the error done by the truncation is another bit advantage of the POD.
+The remaining eigenfunctions span the POD space $\mathbb{X}_{N} = \text{span} \{\xi_n: 1\leq n \leq N \} $.
+
+\subsubsection{Computing the POD}
+\label{sec:ComputePOD}
+
+To compute the POD we introduce the snapshot matrix $\mathcal{W}$, defined as:
+\begin{align*}
+\mathcal{W} = 
+\begin{bmatrix} 
+\vline & \vline & & \vline\\ 
+\underline{u}^{\mathcal{ N }}(\mu_{1}) & \underline{u}^{\mathcal{ N }}(\mu_{2}) & \hdots & \underline{u}^{\mathcal{ N }}(\mu_{n_{train}})  \\
+\vline & \vline & & \vline 
+\end{bmatrix}.
+\end{align*} 
+The snapshot matrix contains the solution vectors $\underline{u}^{\mathcal{ N }}(\mu_{i})$ one row for every $\mu \in  \Xi_{train}$. 
+%Every row contains a truth solution.
+The snapshot matrix has the dimension $\mathcal{W} \in \mathbb{R}^{\mathcal{ N } \times n_{train}}$ with $\mathcal{ N } \gg n_{train}$.
+$\mathcal{ N }$ is the number of degrees of freedom and $n_{train}$ is the number of snapshots. 
+
+We construct the correlation matrix $\underline{C}$ as the inner product of all parameter combinations  $\mu \in \Xi_{train}$. Because $\mu \in \Xi_{train}$ and $\Xi_{train}$ contains $n_{train}$ elements,  $\underline{C}$  has the dimension $n_{train} \times n_{train}$.
+The $i$-th column and the $j$-th row of the matrix $\underline{C}$ are defined as
+\begin{align}
+\label{eq:corrMatrix}
+\underline{C}_{i,j} = \frac{1}{n_{train}} (u(\mu_{i}),u(\mu_{j}))_\mathbb{X}.
+\end{align}
+
+We define  $G=[(\varphi_k^\mathcal{ N },\varphi_l^\mathcal{ N })_\mathbb{X}]_{1\leq k,l \leq \mathcal{ N }} \in \mathbb{R}^{\mathcal{ N } \times \mathcal{ N }}$ as the matrix containing the inner products of all basis functions.
+Using $G$ and (\ref{eq:truthSolution}) we get the representation
+\begin{align*}
+\underline{C}_{i,j} &=
+\frac{1}{n_{train}} 
+\sum_{k=1}^{\mathcal{ N }} \sum_{l=1}^{\mathcal{ N }} 
+u_k(\mu_{i}) u_l(\mu_{j})
+(\varphi_k^\mathcal{ N },\varphi_l^\mathcal{ N })_\mathbb{X}
+\\ &=
+\frac{1}{n_{train}} 
+\underline{u}^{\mathcal{ N }}(\mu_{i})^T G \underline{u}^{\mathcal{ N }}(\mu_{j}).
+\end{align*}
+
+We stored $\underline{u}^{\mathcal{ N }}(\mu_{i})$ in the snapshot matrix $\mathcal{ W }$, so we can compute the matrix $\underline{C}$ using a matrix-matrix product
+\begin{align*}
+\underline{C} =
+\frac{1}{n_{train}}
+\mathcal{W}^T G \mathcal{W}.
+\end{align*}
+
+
+Solving the eigenvalue problem of $\underline{C}$ 
+\begin{align*}
+\underline{C} v_n &= \lambda_n v_n ,\quad 1 \leq n \leq n_{train} ,
+\end{align*}
+is equivalent to the eigenvalue problem (\ref{eq:evpfunk}) \cite[Section 3.2.1, Linear algebra box]{HRSbook}.
+
+The POD basis functions $\xi_i$ are given as linear combinations of the snapshots $u^\mathcal{ N }(\mu_{n})$
+\begin{align*}
+\xi_i = 
+\frac{1}{\sqrt{\lambda_{i}}} 
+\sum_{n=1}^{n_{train}} 
+v_{n,i} 
+u^\mathcal{ N }(\mu_{n})
+=
+\frac{1}{\sqrt{\lambda_{i}}} 
+\sum_{n=1}^{n_{train}}  
+\sum_{j=1}^\mathcal{ N } 
+v_{n,i}
+u_j^\mathcal{ N } (\mu) \cdot \varphi_j^\mathcal{ N }
+\end{align*}
+where $v_{n,i}$ is the $n$-th entry of the $i$-th eigenvector \cite[Section 3.2.1, Linear algebra box]{HRSbook}.
+
+To represent the POD basis functions as in (\ref{eq:basisfun}) we compute the matrix $B$. The coefficients are defined as $ b_{i,k} = \frac{1}{\sqrt{\lambda_{i}}} v_{n,i} u_j^\mathcal{ N } (\mu) $. We get the matrix representation
+\begin{align*}
+B = WVD^{-1/2}.
+\end{align*}
+The matrix product $WV$ is equivalent to the  linear combination $ v_{n,i} u_j^\mathcal{ N } (\mu) $ for all $N$ basis functions.
+The multiplication of the matrix $D^{-1/2}$ is the scaling factor $ \frac{1}{\sqrt{\lambda_{i}}}$. This operation is cheap because $D$ is a diagonal matrix with the eigenvalues on its diagonal.
+The matrix $B$ contains the coefficients for the $i$-th POD basis functions $\xi_i $ in its $i$-th column.
+
+\newpage
+\section{Singular Value Decomposition}
+\label{sec:SVD}
+The Singular Value Decomposition (SVD) of $\mathcal{W} \in \mathbb{R}^{\mathcal{ N } \times n_{train}}$ is given through
+\begin{align}
+\label{eq:SVD}
+\mathcal{W} &= U S V^{T} 
+\end{align}
+with the left singular vectors $U \in \mathbb{R}^{\mathcal{ N } \times n_{train}}$ and  the right singular vectors $V \in \mathbb{R}^{ n_{train} \times n_{train}}$, $U$ and $V$ are both orthonormal matrices. 
+
+When the scalar product of the space $\mathbb{X}$ in equation (\ref{eq:corrMatrix}) is equal to the $L^2$ scalar product, then the eigenvalues of $ \mathcal{W}^T \mathcal{W} $ are equal to the square of the singular vectors  $V$ of the snapshot matrix $ \mathcal{W} $ \cite[Section 3.2.1, Linear algebra box]{HRSbook}.
+The POD modes then are the first $N$ columns in $U$ \cite{parapod}.
+
+The connection between eigenvalues and singuar values is the following:
+\begin{align}
+\label{eq:WWsvd}
+\mathcal{W}^T \mathcal{W} \overset{1.)}{=} (USV^T)^T USV^T \overset{2.)}{=} VSU^T USV^T \overset{3.)}{=} V S^2 V^T.
+\end{align}
+
+In $1.)$, we replace the snapshot matrix $\mathcal{ W }$ with its SVD.
+In $2.)$, we apply the transpose. This leads to $U^TU$, and because $U$ is an orthonormal matrix, $U^TU$ is equal to the identity matrix.
+In $3.)$, we cancel out $U^TU$ because of the orthonormality. This leads to  $V S^2 V^T$, which is the eigendecomposition.
+It follows that the eigenvalues of $\mathcal{W}^T \mathcal{W}$ are equal to the square of the singular values of $\mathcal{W}$ and the eigenvectors of $\mathcal{W}^T \mathcal{W}$  are equal to the right singular vectors $V$ of $ \mathcal{W} $. 
+
+Because we are interested in the left singular vectors $U$, we rearrange (\ref{eq:SVD}).
+We can rearrange it, because we have computed the matrices $U$ and $S$ using the eigenvalue problem.
+We bring $V^T$ on the other side by multiplying with $V$ and $S$ by multiplying with $S^{-1}$.
+\begin{align}
+U = \mathcal{W}VS^{-1}
+\end{align}
+
+
+%\section{Proper Orthogonal Decomposition with Interpolation}
+
+
+

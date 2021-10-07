@@ -1,0 +1,105 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.521in,
+height=3.566in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=0,
+xmax=20,
+xlabel style={font=\color{white!15!black}},
+xlabel={nof porcessors},
+ymin=0,
+ymax=20,
+ylabel style={font=\color{white!15!black}},
+ylabel={speed up},
+axis background/.style={fill=white},
+legend style={at={(0.03,0.97)}, anchor=north west, legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=mycolor1]
+table[row sep=crcr]{%
+	1	1\\
+	2	1.92431622486842\\
+	3	2.86955087509647\\
+	4	3.78859096250401\\
+	5	4.57254361344455\\
+	6	5.44154217845808\\
+	7	6.12190565218488\\
+	8	6.90788980818617\\
+	9	7.48645343994128\\
+	10	8.2637584421916\\
+	11	8.73720815645846\\
+	12	9.46265182892539\\
+	13	10.1839559813305\\
+	14	10.8783979878108\\
+	15	11.5733732964829\\
+	16	12.2549905637809\\
+	17	12.8694008915587\\
+	18	13.5621813860314\\
+	19	14.1583802674168\\
+	20	14.7955303246676\\
+};
+\addlegendentry{correlation Matrix}
+
+\addplot [color=mycolor2]
+table[row sep=crcr]{%
+	1	0.135187954492142\\
+	2	0.261428587629567\\
+	3	0.383096379635554\\
+	4	0.517335209472257\\
+	5	0.626107633829327\\
+	6	0.74547142018656\\
+	7	0.824985863878093\\
+	8	0.955547541622366\\
+	9	1.01531858292097\\
+	10	1.14986432426501\\
+	11	1.22138243818183\\
+	12	1.29599489523424\\
+	13	1.42121065464869\\
+	14	1.51717930914201\\
+	15	1.6180480734473\\
+	16	1.71904712190248\\
+	17	1.81235504540273\\
+	18	1.88282306049357\\
+	19	1.96388257043303\\
+	20	2.09878819330638\\
+};
+\addlegendentry{alg from paper\cite{parapod}}
+
+\addplot [color=mycolor3]
+table[row sep=crcr]{%
+	1	1\\
+	2	2\\
+	3	3\\
+	4	4\\
+	5	5\\
+	6	6\\
+	7	7\\
+	8	8\\
+	9	9\\
+	10	10\\
+	11	11\\
+	12	12\\
+	13	13\\
+	14	14\\
+	15	15\\
+	16	16\\
+	17	17\\
+	18	18\\
+	19	19\\
+	20	20\\
+};
+\addlegendentry{optimum}
+
+\end{axis}
+\end{tikzpicture}%

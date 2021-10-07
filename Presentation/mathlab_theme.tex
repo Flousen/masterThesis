@@ -1,0 +1,118 @@
+\PassOptionsToPackage{subsection=false}{beamerouterthememiniframes}
+\documentclass[9pt,compress,t]{beamer}
+\usetheme[
+	bullet=circle,
+	alternativetitlepage=true,
+	titleline=true,
+	titlepagelogo=img/loghi_insieme,
+]{mathlab}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{verbatim} % per comment
+\usepackage{lmodern} % font più chiaro
+\usepackage{ragged2e}
+\usepackage{bm}
+\usepackage{tikz}
+\usepackage[thicklines]{cancel}
+\usepackage{xcolor}
+\usepackage{wasysym}
+\usepackage{units}
+\usepackage{tikzsymbols}
+\usepackage{multimedia}
+\usepackage{graphicx}
+%\usepackage{media9}%
+\newcommand\Ccancel[2][black]{\renewcommand\CancelColor{\color{#1}}\cancel{#2}}
+\newcommand{\cfbox}[2]{%
+    \colorlet{currentcolor}{.}%
+    {\color{#1}%
+    \fbox{\color{currentcolor}#2}}%
+}
+
+%% matlab 2 tikz
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+%% the following commands are needed for some matlab2tikz features
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning,arrows}
+\usepgfplotslibrary{patchplots}
+\usepackage{grffile}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\DeclareMathOperator*{\arginf}{arg\,inf}
+%% end matlab 2 tikz
+
+
+\setbeamertemplate{navigation symbols}{}
+
+
+\graphicspath{%
+	{img/}%
+}
+
+%\title[Here you put a short title]{\LARGE\bf Here it goes a possibly longer title}
+\title[Parallel POD]{\LARGE\bf A multiprocess and multithreaded strategy\\ for parallel proper orthogonal decomposition\\ in a reduced order modeling framework}
+\author[F. Krötz]{\vspace{-1cm}\\\textbf{Florian Krötz}} 
+\institute[SISSA mathLab]{%
+\vspace{-3mm}\\%
+MathLab, Mathematics Area, SISSA International School for Advanced Studies, Trieste, Italy\\ \vspace{3mm}
+Ulm University, Ulm, Germany \\
+}
+\date{\vspace{-3mm}\\ 19.06.2020 \\
+}
+% Norma
+\newcommand\norm[1]{\left\lVert#1\right\rVert}
+
+\usepackage{algpseudocode}
+\usepackage[Algorithm]{algorithm}
+
+
+% Evidenziato
+\newcommand{\TODO}[1]{{\color{red}#1}}
+\newcommand{\highlight}[1]{\textbf{\color{bluemathlab}#1}}
+\newcommand{\highlightB}[1]{\textbf{\color{black!15!orangemathlab}#1}}
+\newcommand{\mathhighlight}[1]{\color{bluemathlab}#1}
+\newcommand{\mathhighlightB}[1]{\color{black!15!orangemathlab}#1}
+
+% Framebreaks: move continuation count from subtitle to title
+\setbeamertemplate{frametitle continuation}[from second][]
+\makeatletter 
+\long\def\beamer@@frametitle[#1]#2{% 
+  \beamer@ifempty{#2}{}{% 
+    \gdef\insertframetitle{#2\ifnum\beamer@autobreakcount>1\relax{}\space(\insertcontinuationcountroman)\fi}% 
+  \gdef\beamer@frametitle{#2}% 
+  \gdef\beamer@shortframetitle{#1}% 
+}% 
+}
+\makeatother 
+
+\setbeamercolor{blockcolor1}{fg=black,bg=bluemathlab!10}
+\setbeamercolor{blockcolor2}{fg=black,bg=orangemathlab!10} 
+
+\AtBeginSection[]
+{{
+%	\setbeamertemplate{footline}[decolines theme without pages]
+	\addtocounter{framenumber}{0}
+	%\begin{frame}
+	%\frametitle{Table of contents}
+	%\tableofcontents %[currentsection]
+	%\end{frame}
+}}
+
+\begin{document}
+% Titel page %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[t,plain]
+	\addtocounter{framenumber}{-1}
+	\titlepage
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{slides}
+
+\end{document}

@@ -1,0 +1,235 @@
+\NeedsTeXFormat{LaTeX2e}
+\documentclass[a4paper,12pt,
+headsepline,           % Linie zw. Kopfzeile und Text
+oneside,               % einseitig
+pointlessnumbers,      % keine Punkte nach den letzten Ziffern in Überschriften
+bibtotoc,              % LV im IV
+%DIV=13.5,              % Satzspiegel auf 15er Raster, schmalere Ränder   
+%BCOR15            % Bindekorrektur
+%open=right, twoside=true
+]{scrbook}
+
+
+\KOMAoptions{DIV=last} % Neuberechnung Satzspiegel nach Laden von Paket helvet
+
+\pagestyle{headings}
+\usepackage{emptypage}      % no heading auf leeren Seiten
+
+\usepackage{blindtext}
+
+
+%% matlab 2 tikz
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+%% the following commands are needed for some matlab2tikz features
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning,arrows}
+\usepgfplotslibrary{patchplots}
+\usepackage{grffile}
+\usepackage{amsmath}
+\DeclareMathOperator*{\arginf}{arg\,inf}
+
+%% end matlab 2 tikz
+
+\usetikzlibrary{shapes,snakes}
+
+\usepackage{algpseudocode}
+\usepackage[Algorithm]{algorithm}
+\newcommand{\algorithmautorefname}{Algorithm}
+\usepackage{booktabs}
+
+\usepackage{mathrsfs}
+
+
+\usepackage[english]{babel}
+\selectlanguage{english} 
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+
+% Helvetica als Standard-Dokumentschrift
+%\usepackage[scaled]{helvet}
+%\renewcommand{\familydefault}{\sfdefault} 
+
+\usepackage{graphicx}
+
+% Literaturverzeichnis mit BibLKaTeX
+\usepackage[backend=bibtex8]{biblatex}
+\bibliography{bibliography}
+
+% Für Tabellen mit fester Gesamtbreite und variabler Spaltenbreite
+\usepackage{tabularx} 
+
+% Besondere Schriftauszeichnungen
+\usepackage{url}              % \url{http://...} in Schreibmaschinenschrift
+\usepackage{color}            % zum Setzen farbigen Textes
+
+\usepackage{amssymb, amsmath} % Pakete für Mathe-Umgebungen und -Symbole
+
+\usepackage{setspace}         % Paket für div. Abstände, z.B. ZA
+%\onehalfspacing              % nur dann, wenn gefordert; ist sehr groß!!
+\setlength{\parindent}{0pt}   % kein linker Einzug der ersten Absatzzeile
+\setlength{\parskip}{1.4ex plus 0.35ex minus 0.3ex} % Absatzabstand, leicht variabel
+
+% Tiefe, bis zu der Überschriften in das Inhaltsverzeichnis kommen
+\setcounter{tocdepth}{3}      % ist Standard
+
+% Beispiele für Quellcode
+\usepackage{listings}
+\lstset{language=C++,
+  tabsize=2,	
+  showstringspaces=false,
+  frame=single,
+  numbers=left,
+  basicstyle=\tiny,
+  numberstyle=\tiny}
+
+% hier Namen etc. einsetzen
+\newcommand{\fullname}{Florian Krötz}
+\newcommand{\email}{florian.kroetz@uni-ulm.de}
+\newcommand{\titel}{A multiprocess and multithreaded\\ strategy for parallel proper orthogonal\\ decomposition in a reduced order\\ modeling framework}
+\newcommand{\jahr}{2020}
+\newcommand{\matnr}{884948}
+\newcommand{\gutachterA}{Prof.\,Dr.\,Karsten Urban}
+\newcommand{\gutachterB}{Prof.\,Dr.\,Heiko Peuscher}
+\newcommand{\gutachterC}{Prof.\,Dr.\,Gianluigi Rozza}
+\newcommand{\betreuer}{Nicola  Demo}
+
+% hier die Fakultät auswählen
+%\newcommand{\fakultaet}{---  Im Quellcode anpassen nicht vergessen! ---}
+%\newcommand{\fakultaet}{Ingenieurwissenschaften, Informatik und\\Psychologie}
+\newcommand{\fakultaet}{Mathematik und\\Wirtschafts-\\wissenschaften}
+%\newcommand{\fakultaet}{Medizin}
+%\newcommand{\fakultaet}{Naturwissenschaften}
+
+% hier das Institut einsetzen
+\newcommand{\institut}{Institut für\\ Numerische Mathematik}
+
+% Informationen, die LaTeX in die PDF-Datei schreibt
+\pdfinfo{
+  /Author (\fullname)
+  /Title (\titel)
+  /Keywords ()
+}
+
+\usepackage{hyperref}
+\hypersetup{
+pdftitle=\titel,
+pdfauthor=\fullname,
+pdfsubject={Masterarbeit},
+colorlinks=false,
+bookmarksnumbered=true,
+bookmarksopen=true,
+bookmarksopenlevel=1,
+pdfborder=0 0 0	% keine Box um die Links!
+}
+
+% Trennungsregeln
+\hyphenation{Sil-ben-trenn-ung}
+
+\begin{document}
+\frontmatter
+
+% Titelseite
+\thispagestyle{empty}
+\begin{addmargin*}[4mm]{-10mm}
+
+\includegraphics[height=1.8cm]{images/sissaLogo}
+\hfill
+\includegraphics[height=1.8cm]{images/unilogo_sw}\\[1em]
+
+{\footnotesize
+%{\bfseries Universität Ulm} \textbar ~89069 Ulm \textbar ~Germany
+\parbox[t]{35mm}{\bfseries SISSA - Scuola\\
+	Internazionale\\
+	Superiore di \\
+	Studi Avanzati\\
+	\mdseries mathlab, \\
+	Mathematics Area}
+\hspace*{80mm}
+\parbox[t]{40mm}{\bfseries Fakultät für\\
+\fakultaet\\
+\mdseries \institut}\\[2cm]
+
+\parbox{140mm}{\bfseries \LARGE \titel}\\[2em]
+{\footnotesize Master's thesis}\\[3em]
+{\footnotesize \bfseries By:}\\
+{\footnotesize \fullname\\ \email}\\ \matnr\\[2em]
+{\footnotesize \bfseries Reviewers :}\\                     
+{\footnotesize \gutachterA\\ \gutachterB\\ \gutachterC}\\[2em]
+{\footnotesize \bfseries Supervisor:}\\ 
+{\footnotesize \betreuer}\\[2em]
+{\footnotesize \jahr}
+}
+\end{addmargin*}
+
+
+% Impressum
+\clearpage
+\thispagestyle{empty}
+{ \small
+  \flushleft
+  Version \today \\\vfill
+  \copyright~\jahr~\fullname\\[0.5em]
+% Wenn Sie Ihre Arbeit unter einer freien Lizenz bereitstellen möchten, können Sie die nächste Zeile in Ihren Code aufnehmen. Bitte beachten Sie, dass Sie hierfür an allen Inhalten, inklusive enthaltener Abbildungen, die notwendigen Rechte benötigen! Beim Veröffentlichungsexemplar Ihrer Dissertation achten Sie bitte darauf, dass der Lizenztext nicht den Angaben in den Metadaten der genutzten Publikationsplattform widerspricht. Nähere Information zu den Creative Commons Lizenzen erhalten Sie hier: https://creativecommons.org/licenses/
+%This work is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License. To view a copy of this license, visit \href{https://creativecommons.org/licenses/by/4.0/}{https://creativecommons.org/licenses/by/4.0/} or send a letter to Creative Commons, 543 Howard Street, 5th Floor, San Francisco, California, 94105, USA. \\
+% Typesetting: PDF-\LaTeXe
+}
+
+% ab hier Zeilenabstand etwas größer 
+\setstretch{1.2}
+\thispagestyle{empty}
+\input{chapters/acknowledgement}
+\setcounter{page}{1}
+\newpage
+\thispagestyle{empty}
+\quad 
+\newpage
+
+\input{chapters/Abstract}
+\newpage
+\thispagestyle{empty}
+\quad 
+\newpage
+%\setcounter{page}{2}
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+\listoffigures
+%\setcounter{page}{3}
+\mainmatter
+% hier weitere Kapitel einbinden
+\input{chapters/introduction}
+\input{chapters/RB}
+\input{chapters/POD}
+\input{chapters/parallel}
+\input{chapters/numRes}
+
+
+\appendix
+% hier Anhänge einbinden
+\input{chapters/sources}
+
+\backmatter
+\printbibliography
+
+\clearpage
+\thispagestyle{empty}
+
+Name: \fullname \hfill Matrikelnummer: \matnr \vspace{2cm}
+%Name: \fullname \hfill matriculation number : \matnr \vspace{2cm}
+
+%\minisec{Erklärung}
+%Ich erkläre, dass ich die Arbeit selbständig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel verwendet habe.\vspace{2cm}
+\minisec{Declaration}
+
+I declare that I have written the work independently and have not used any other sources and aids than those cited.\vspace{1.5cm}
+\begin{figure}[H]
+\hspace{8.75cm}
+\includegraphics[width=0.3\textwidth]{images/Fueller2.1.png}
+\end{figure}
+\vspace{-1.3cm}
+Ulm, \today, \dotfill
+
+\hspace{10cm} {\footnotesize \fullname}
+\end{document}

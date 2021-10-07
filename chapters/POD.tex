@@ -1,0 +1,180 @@
+\chapter{Parallel computation of the POD}
+
+\section{Parallel POD using SVD}
+\label{sec:paraSVD}
+
+The method that is described in this Section was introduced in \cite{parapod}. 
+This approach aims to provide a parallel version using the SVD.
+The SVD of the snapshot matrix $\mathbb{W}$ is given through $\mathcal{ W } = \mathcal{ USV}^T $, with the unitary $\mathcal{U}$ containing the left singular vectors, the unitary $\mathcal{V}^T$ containing the right singular vectors and the diagonal matrix $\mathcal{ S }$ containing the singular values on its diagonal.
+
+Instead of computing the SVD of the whole snapshot matrix, the snapshot matrix is partitioned, and the parts are scattered to the available processors.
+Then every processor computes the right singular vectors of its part.
+The singular vectors of all parts are then used to approximate the right singular vectors of the whole snapshot matrix.
+The left singular vectors $u_i$ of $\mathcal{U}$, can be obtained by post-multiplying the snapshot matrix with the i-th column $v_i$ of $\mathcal{V}$, since 
+\begin{align}
+\label{eq:leftSV}
+\mathcal{W} v_i= \mathcal{ USV}^T v_i = s_{ii}u_i.
+\end{align}
+%see \cite{parapod}. 
+
+We now describe the method in more detail.
+We assume that we are just computing the $N$ left singular vectors with the $N$ largest singular values. $N$ is less or equal to the number of snapshots $N \leq n_{train}$.
+The snapshot matrix is scattered to all processors. We denote $n_p$ the number of processors.
+Therefore, the snapshot matrix  $\mathcal{W} \in \mathbb{R}^{\mathcal{ N } \times n_{train}}$ is partitioned in blocks with $K$ rows, choosing $K$ so that $n_p \times K = \mathcal{ N }$. We obtain 
+\begin{align*}
+\mathcal{W} = [W_1^T ... W_{n_p}^T]^T,
+\end{align*}
+with $W_k \in \mathbb{R}^{N \times n_{train}}$, $k=1,...,n_p$.  
+
+Each processor computes the local right singular vectors $V_k$ and its part of the correlation matrix $C_k$.
+\begin{align}
+\text{svd}(W_k) = [ U,S,V_k]\\
+C_k = W_k^T \cdot W_k 
+\label{eq:corr1}
+\end{align}
+The $N$ right singular vectors of $V_k$ with the largest singular values and $C_k$ are sent to the master process. This communication is cheap because $C_k$ has the small dimension $n_{train}\times n_{train}$ and we only need to send the $N$ first columns of $V_k$, so the dimension is $n_{train}\times N$. 
+
+The master process is now computing an approximation of the right singular values $\mathcal{V}$.
+Therefore, the matrix $\hat{ \mathcal{V} }$ is constructed by writing the right singular vectors $V_k$ column wise in a matrix
+\begin{align*}
+\hat{ \mathcal{V} } = [V_1 ... V_{n_p}].
+\end{align*}
+This matrix contains the right singular vectors of all parts of the snapshot matrix.
+To compute the approximation of the right singular vectors of the global snapshot matrix, the right singular vectors of $\hat{ \mathcal{V} }$ are computed with
+\begin{align*}
+\text{svd}( \hat{ \mathcal{V} }) = 
+[\mathcal{T},\mathcal{M},\mathcal{V}].
+\end{align*}
+The first $N$ columns of $\mathcal{V}$ are a good approximation of the global singular vectors.
+
+The master process also computes the global correlation matrix. 
+\begin{align}
+\label{eq:corr2}
+\mathcal{ C } = \sum_{i=1}^{n_p} C_k.
+\end{align}
+Because the snapshot matrix was partitioned row wise, the global correlation matrix is the sum of all local correlation matrices $C_k$.
+
+We have now obtained a good approximation of the first $N$ global right singlar vectors.
+We can obtain the first $N$ global left singlar vectors using (\ref{eq:leftSV}).
+Therefore, we want to compute
+\begin{align*}
+\text{svd}( \mathcal{ W }\mathcal{V} ) =
+[\mathcal{U}, \mathcal{S}, \mathcal{Z}].
+\end{align*}
+Computing $ \text{svd} ( \mathcal{ W } \mathcal{V} ) $ globally is to expensive. We can make use of the correlation matrix to reduce the computational effort.
+As we have shown in (\ref{eq:WWsvd}) we can solve $ \text{svd} ( \mathcal{ W } \mathcal{V} ) $ over the eigenvalue problem of the correlation matrix
+\begin{align*}
+(\mathcal{W}\mathcal{V})^T(\mathcal{W}\mathcal{V}) = 
+\mathcal{V}^T \mathcal{W}^T\mathcal{W}\mathcal{V}  =
+\mathcal{V}^T \mathcal{ C } \mathcal{V} = 
+\mathcal{Z} \mathcal{S}^2 \mathcal{Z}.
+\end{align*}
+We have already computed the correlation matrix $\mathcal{ C }$ in (\ref{eq:corr1}) and (\ref{eq:corr2}).
+
+Computing $\mathcal{V}^T C \mathcal{V}$ and solving the eigenvalue problem $\mathcal{V}^T C \mathcal{V} = 
+\mathcal{Z} \mathcal{S}^2 \mathcal{Z}$ is cheap because of the small dimension.
+After solving the eigenvalue problem we can compute $ \mathcal{V} \mathcal{Z} \mathcal{S}^{-1} $ on the master process so we just have to send a small $n_{train} \times N$ matrix.
+
+Every process can now compute its part of the left singular vectors
+\begin{align*}
+\mathcal{U}_k =  \mathcal{W}_k \mathcal{V} \mathcal{Z} \mathcal{S}^{-1}.
+\end{align*}
+
+A big disadvantage of this method is that we only compute $N$ singular vectors but not the singular values, so we can't state anything about the error we make with the truncation. 
+
+\newpage
+
+
+
+\section{Parallel POD by solving an eigenvalue problem}
+\label{sec:algsimp}
+In this Section we describe the parallel aspects of computing the POD by solving the eigenvalue problem of the correlation matrix, as described in Section \ref{sec:POD}.\\
+In Section \ref{sec:POD} we saw that we need to solve the eigenvalue problem of the correlation matrix
+\begin{align}
+\label{eq:evpshort}
+\mathcal{W}^T \mathcal{W} = V D V^T,
+\end{align}
+to obtain the POD vectors 
+\begin{align}
+\label{eq:afterevp}
+U = \mathcal{W}VD^{-\frac{1}{2}}.
+\end{align}
+The expensive operation in terms of computational effort for this method are the parts of the algorithm where we have to deal with the big dimension $\mathcal{ N }$. These operations are:
+\begin{itemize}
+	\item The computation of the correlation matrix $\mathcal{W}^T\mathcal{W}$. 
+	The snapshot matrix has the dimension $\mathcal{W} \in \mathbb{R}^{\mathcal{ N } \times n_{train}}$.
+	The computational effort is $ O(\mathcal{ N }^2 \cdot n_{train})$. 
+	The dimension of the truth solutions $\mathcal{ N }$ has a quadratic influence. This makes this operation expensive.
+	
+	\item The multiplication of $VS^{-1}$ on the snapshot matrix $\mathcal{W}$.
+	After the truncation the matrix $VS^{-1}$ has the dimension $\mathcal{W} \in \mathbb{R}^{  n_{train} \times N}$.
+	The computational effort is $ O(\mathcal{ N } \cdot n_{train} \cdot N)$. 
+	In this case the $\mathcal{ N }$ has no quadratic influence but we still have to deal with this large dimension.
+	$n_{train} $ and $ N$ are proportionately small.
+\end{itemize}
+Luckily both operation are matrix products and can  be parallelized.
+
+The cheap operations in terms of computational effort for this method are the operations where we have not the big dimension $\mathcal{ N }$. These operations are:
+\begin{itemize}
+	\item Solving the eigenvalue problem of the correlation matrix, because of small dimension of $\mathcal{W}^T \mathcal{W} \in \mathbb{R}^{n_{train} \times n_{train}}$.
+	\item $VS^{-1}$ is cheap because of the small dimensions and $S$ is a diagonal matrix.
+	Since $S$ is a diagonal matrix the inversion is just the multiplicative inverse of the diagonal elements.
+\end{itemize}
+We can call these operations cheap because they can be done on a single processor, and there is no time-consuming communication.
+
+\subsection{Parallel computation of the correlation matrix}
+For the parallel computation of the correlation matrix, we make use of the special dimension of the snapshot matrix.
+The snapshot matrix $\mathcal{W}$ has the dimension $\mathcal{ N } \times n_{train}$.
+
+We divide the matrix into blocks along the rows. We can now compute the correlation matrix for each block independent from the other blocks. 
+The global correlation matrix can be computed by summing up the correlation matrices of the blocks. 
+This is cheap because the local correlation matrices and the global correlation matrix have the small dimension  $n_{train} \times n_{train}$.
+\begin{align}
+C = W^T \cdot W =
+\begin{bmatrix} 
+w_1^T & \hdots & w_n^T  
+\end{bmatrix} 
+\cdot 
+\begin{bmatrix} 
+w_1 \\ \vdots \\ w_n  
+\end{bmatrix} = 
+w_1^T \cdot w_1 + \hdots + w_n^T \cdot w_n = 
+\sum_{i=1}^{n} w_i^T\cdot w_i
+\end{align}
+
+\subsection{Solving the eigenvalue problem}
+
+After solving the eigenvalue problem (\ref{eq:evpshort}) we compute $ \hat{ V } = VD^{-\frac{1}{2}} $.
+This is also very cheap because $S$ is a diagonal matrix with the eigenvalues $\lambda_{i}$ on its diagonal. 
+We only need to scale the $i$-th row of $V$ with $\frac{1}{\lambda_{i}}$.
+We use $\hat{ V }$ to compute the POD vectors as in (\ref{eq:afterevp})
+
+\subsection{Parallel computation of U}
+
+Because $W$ is already blocked, we only have to multiply  $\hat{ V }$ on each block of $W$ from the right to compute $U$.
+\begin{align}
+U = W \cdot VS^{-1} = 
+W \cdot\hat{ V } = 
+\begin{bmatrix} 
+w_1 \\ \vdots \\ w_n  
+\end{bmatrix} 
+\cdot  \hat{ V } =  
+\begin{bmatrix} 
+w_1 \cdot  \hat{ V }  \\ \vdots \\ w_n \cdot \hat{ V }   
+\end{bmatrix}
+\end{align}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

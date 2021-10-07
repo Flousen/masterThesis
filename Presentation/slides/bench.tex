@@ -1,0 +1,219 @@
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{Partitioning of the Snapshot matrix}}
+	\normalsize
+
+	\begin{minipage}[t]{0.3\textwidth}
+		\scalebox{0.75}{
+			\input{../images/blocking1}
+		}
+	\end{minipage}
+	\begin{minipage}[t]{0.6\textwidth}\vspace{-60mm}
+		\begin{enumerate}
+%			\item Scatter Snapshot matrix
+			\item compute local correlation matrix $w_i^Tw_i$
+			\item reduce local correlation matrices to get global correlation matrix $C$
+			\item Solve EVP $C=V D V^T$
+			\item compute $VD^{-\frac{1}{2}}$
+			\item Broadcast $VD^{-\frac{1}{2}}$ to every processor
+			\item $	u_i = w_i \cdot VD^{-\frac{1}{2}}$
+%			\item Scatter POD vectors $u_i$ to $U$
+		\end{enumerate}
+	\end{minipage}
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{Snapshot matrix is already distributed}}
+	\normalsize random $10^7 \times 300 $ matrix
+	
+	\centering
+	\scalebox{0.75}{
+		\input{../images/bench1}
+	}	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{MPI}
+	\Large{\highlightB{MPI\_Scatter}}
+	\normalsize
+	
+	\centering
+	\vspace{1cm}
+	\input{../images/Scatter}
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{MPI}
+	\Large{\highlightB{MPI\_Gather}}
+	\normalsize
+	
+	\centering
+	\vspace{1cm}
+	\input{../images/Gather}
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{MPI}
+	\Large{\highlightB{MPI\_Scatterv and MPI\_Gatherv}}
+	\normalsize
+	
+	\vspace{1cm}
+	\centering\input{../images/Scatterv}	
+	
+	\vspace{1cm}
+	sendcount = [3,2], displacement = [0,3]
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{With scattering and gathering of $\mathcal{ W }$}}
+	\normalsize  random $10^7 \times 300 $ matrix
+	
+	\centering
+	\scalebox{0.75}{
+		\input{../images/bench1comm}
+	}	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{nonblocking communication}
+	\Large{\highlightB{MPI} \highlight{I} \highlightB{functions}}
+	
+	\begin{itemize}
+		\item \highlight{I} functions provide non bocking communication
+		\item communication is not blocking processor
+		\item communication buffer should not be used while communication	
+		\item MPI\_Scatterv $\Rightarrow$ MPI\_\highlight{I}scatterv  
+		\item MPI\_Gatherv $\Rightarrow$ MPI\_\highlight{I}gatherv
+
+	\end{itemize}	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{nonblocking communication}
+	\Large{\highlightB{Partitioning for non-blocking communication}}
+	\normalsize
+	
+	\centering
+	\scalebox{0.75}{
+		\input{images/blocking2}
+	}	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{Different block sizes}}
+	\normalsize  random $10^7 \times 300 $ matrix
+	
+	\centering
+	\scalebox{0.75}{
+		\input{../images/bench3}
+	}	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{Increasing waiting time}}  
+	\normalsize
+	
+	\begin{itemize}
+		\item We measured the waiting time
+		\item Waiting time increased from $0.0062$ to $0.0263$ (magnitude of 10)
+		\item Possible reason: \highlight{too many communications}
+		\item Possible solution: \highlight{reduce} MPI communications
+	\end{itemize}
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Hybrid implementation}
+	\Large{\highlightB{MPI communication}}
+	\normalsize
+	
+	\vspace{0.5cm}
+	\begin{minipage}{0.5\textwidth}
+	\tikzset{
+		main/.style={black, line width=0.4mm, opacity=1},
+		second/.style={gray, opacity=5},
+		arrow/.style={-latex, shorten >=1ex, shorten <=1ex, bend angle=45}
+	}
+	\begin{tikzpicture}
+	
+	
+	\draw[main] (0,0) -- (4,0) -- (4,2.5)-- (0,2.5)-- (0,0);
+	
+	\node (rect) at (1,1) [draw,thick,minimum width=1cm,minimum height=1cm]  {$p_3$};
+	\node (rect) at (3,1) [draw,thick,minimum width=1cm,minimum height=1cm]  {$p_4$};
+	
+	\draw[main] (0,3) -- (4,3) -- (4,5.5)-- (0,5.5)-- (0,3);
+	
+	\node (rect) at (1,4) [draw,thick,minimum width=1cm,minimum height=1cm]  {$p_1$};
+	\node (rect) at (3,4) [draw,thick,minimum width=1cm,minimum height=1cm]  {$p_2$};
+	
+	\draw [arrow]  (1.5,4) to (2.5,4);
+	\draw [arrow]  (1,3.5) to (1,1.5);
+	
+	\node at (2,5) {node 1};
+	\node at (2,2) {node 2};
+	
+	\node at (2   , 4.2) {(1.)};
+	\node at (0.7 , 2.7) {(2.)};
+	
+	
+	\end{tikzpicture}
+\end{minipage}%\hspace{0.5cm}
+\begin{minipage}{0.5\textwidth}
+	\vspace{-3cm}
+	\begin{enumerate}
+		\item \highlight{Copy} operation in memory
+		\item \highlight{Sending} operation via network
+	\end{enumerate}
+\end{minipage}\hspace{0.5cm}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Hybrid implementation}
+	\Large{\highlightB{MPI \& OpenMP}}
+	\normalsize 
+
+	\begin{minipage}{\textwidth}
+		\centering
+		\vspace{5mm}
+		\begin{minipage}[t]{0.49\textwidth}
+			MPI
+			\begin{itemize}
+				\item Process Based
+				\item Communication on one node is copying
+			\end{itemize}
+		\end{minipage}
+		\begin{minipage}[t]{0.49\textwidth}
+			OpenMP
+			\begin{itemize}
+				\item Thread based
+				\item shared memory
+			\end{itemize}
+		\end{minipage}
+	\end{minipage}\\
+	\Large{\vspace{5mm}\highlightB{Hybrid implementation}}\\
+	\normalsize
+	\vspace{5mm}
+	\begin{itemize}
+		\item MPI for communication between nodes and processors
+		\item OpenMP parallelization on nodes
+	\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Benchmarks}
+	\Large{\highlightB{Hybrid implementation}}
+	\normalsize random $10^7 \times 300 $ matrix
+	
+	\centering
+	\scalebox{0.75}{
+		\input{../images/bench5}
+	}	
+\end{frame}

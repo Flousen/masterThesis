@@ -1,0 +1,33 @@
+\begin{frame}{Parallel}
+	\Large{\highlightB{Parallel EVP}}
+	\normalsize
+	
+	We compute
+	\begin{align*}
+	\mathcal{W}^T \mathcal{W} = V D V^T
+	\end{align*}
+	The left singular are computed with 
+	\begin{align*}
+	U = \mathcal{W}VD^{-\frac{1}{2}}
+	\end{align*}
+	\begin{minipage}{\textwidth}
+		\centering
+		\begin{minipage}[t]{0.49\textwidth}
+			Expensive operations\\
+			dimension $\mathcal{ N }$
+			\begin{itemize}
+				\item $\mathcal{W}^T \mathcal{W}$
+				\item $	U = \mathcal{W}VD^{-\frac{1}{2}}$
+			\end{itemize}
+		\end{minipage}
+		\begin{minipage}[t]{0.49\textwidth}
+			Cheap operations\\
+			dimension $n_{train}$
+			\begin{itemize}
+				\item $\mathcal{W}^T \mathcal{W} = V D V^T$ (solving EVP)
+				\item $VD^{-\frac{1}{2}}$
+			\end{itemize}
+		\end{minipage}
+
+	\end{minipage}	
+\end{frame}

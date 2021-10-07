@@ -1,0 +1,162 @@
+\begin{frame}{Proper Orthogonal Decomposition}
+	\Large{\highlightB{POD basis generation}}\\ \normalsize
+	The POD is a method to find the optimal orthogonal space in a linear manner.
+
+	
+	\begin{itemize}
+		\item Set based approach $\Xi_{train} = \left\{ \mu_{1},..., \mu_{n_{train}} \right\}$
+		\item $\mathbb{X}_{n_{train}} = \text{span}\left\{ u^\mathcal{ N }(\mu) | \mu \in \Xi_{train} \right\}$
+	\end{itemize}
+
+	\Large{\highlightB{Eigen value problem (EVP)}} \normalsize
+	\begin{align*}
+	C(v) =
+	\frac{1}{n_{train}}
+	\sum_{m=1}^{n_{train}} 
+	\left( v ,u^\mathcal{N}(\mu_{m}) \right)_\mathbb{X} u^\mathcal{N}(\mu_{m}) 
+	, \quad 
+	v \in \mathbb{X}_{n_{train}}
+	\\
+	\left(C(\xi_n),u^\mathcal{N}(\mu_{m})\right)_\mathbb{X}
+	=
+	\lambda_n \left(\xi_n,u^\mathcal{N}(\mu_{m}) \right)_\mathbb{X}
+	, \quad 
+	1 \leq m \leq n_{train}
+	\end{align*}
+
+	\Large{\highlightB{POD error}} \normalsize
+	\begin{align*}
+	\frac{1}{n_{train}}
+	\sum_{ \mu \in \Xi_{train} }   
+	\inf_{ w_N \in \mathbb{X}_{n_{train}} } \| u^\mathcal{N}(\mu) - w_N \|_\mathbb{X}^2 
+	=
+	\sum_{n=N+1}^{n_{train}}\lambda_{n}
+	\end{align*}
+	
+	\begin{itemize}
+		\item Truncate all modes $> N$
+	\end{itemize}
+
+	\end{frame}
+
+
+\begin{frame}{Proper Orthogonal Decomposition}
+	\Large{\highlightB{Snapshot Matrix}}
+	\normalsize
+	
+	\begin{align*}
+	\mathcal{W} = 
+	\begin{bmatrix} 
+	\vline & \vline & & \vline\\ 
+	\underline{u}^{\mathcal{ N }}(\mu_{1}) & \underline{u}^{\mathcal{ N }}(\mu_{2}) & \hdots & \underline{u}^{\mathcal{ N }}(\mu_{n_{train}})  \\
+	\vline & \vline & & \vline 
+	\end{bmatrix}
+	\end{align*}
+	
+	Truth solution
+	\begin{align*}
+	u^{\mathcal{ N }}(\mu) = \sum_{i=1}^{\mathcal{ N }} u_{i}^{\mathcal{ N }}(\mu) \varphi_i, 
+	\qquad
+	\underline{u}^{\mathcal{ N }}(\mu) = 
+	\begin{pmatrix}
+	u_{1}^{\mathcal{ N }}(\mu)\\  \vdots \\ u_{\mathcal{ N }}^{\mathcal{ N }}(\mu)
+	\end{pmatrix}
+	\end{align*}
+	
+	
+\end{frame}
+
+\begin{frame}{Proper Orthogonal Decomposition}
+	\Large{\highlightB{Structure of the snapshot matrix}}
+	\normalsize
+
+	\begin{minipage}[t]{0.3\textwidth}
+		\scalebox{0.75}{
+			\input{../images/blocking1}
+		}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[t]{0.4\textwidth}\vspace{-60mm}
+	\highlight{Partitioning} cases
+	\begin{itemize}
+		\item Domain decomposition
+		\item Manually blocked
+	\end{itemize}
+	\end{minipage}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Proper Orthogonal Decomposition}
+
+	\begin{minipage}[t]{0.48\linewidth}
+		\Large{\highlightB{EVP}}
+		\normalsize
+		
+		\begin{itemize}
+			\item Solving eigen value problem (EVP) of the snapshot matrix
+			\begin{align*}
+				\mathcal{W}^T \mathcal{W} = V D V^T\\
+				U = \mathcal{W}VD^{-\frac{1}{2}}
+			\end{align*}
+		\end{itemize}
+	\end{minipage}
+	\hfill%
+	\begin{minipage}[t]{0.48\linewidth}
+		\Large{\highlightB{SVD}}
+		\normalsize
+		
+		\begin{itemize}
+			\item Singular Value Decomposition (SVD) of the snapshot matrix
+			\begin{align*}
+				\mathcal{W} = USV^T
+			\end{align*}
+		\end{itemize}	 
+	\end{minipage}
+	
+	\vspace{10mm}
+  	
+	Relation singular values and eigen values
+	\begin{align*}   
+		\mathcal{W}^T \mathcal{W} &= (USV^T)^T USV^T = VSU^T USV^T = V S^2 V^T
+	\end{align*}
+	The left singular are computed with 
+	\begin{align*}
+		U = \mathcal{W}VS^{-1}
+	\end{align*}
+
+
+	
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Proper Orthogonal Decomposition}
+	\Large{\highlightB{Parallel SVD}}
+	\normalsize approach introduced by Beattie, Borggaard and Iliescu in 2007
+	
+	\vspace{0.25cm}
+	Singular Value Decomposition (SVD) of the snapshot Matrix $W$
+	\begin{align*}
+	\mathcal{W} &= U S V^{T} 
+	\end{align*}
+	$U$ are the POD modes.
+	\vspace{0.25cm}
+	
+	Compute SVD of the local snapshot matrices $ \mathcal{W} = [W_1^T ... W_{n_p}^T]^T	$
+	\begin{align*}
+	\text{svd}(W_k) &= [ U,S,\boldsymbol{V_k}]
+	\end{align*}
+	Compress local right singular vectors $\boldsymbol{V_k}$ using SVD
+	\begin{align*}
+	\hat{ \mathcal{V} } = [V_1 ... V_{n_p}]
+	\qquad
+	\text{svd}( \hat{ \mathcal{V} }) = 
+	[\mathcal{T},\mathcal{M},\boldsymbol{\mathcal{V}}]
+	\end{align*}
+	Compute left singular vectors	
+	\begin{align*}
+	\text{svd}( \mathcal{ W }\mathcal{V} ) =
+	[\boldsymbol{\mathcal{U}}, \mathcal{S}, \mathcal{Z}]
+	\end{align*}
+
+	
+\end{frame}
+

@@ -1,0 +1,73 @@
+\begin{frame}{~}
+	\Large{\highlightB{Agenda}}
+
+	\vspace{0.2cm}
+	\hspace{0.5cm}
+	\begin{minipage}[t]{0.7\textwidth}
+		\begin{enumerate}
+			\item Reduced Basis Method
+			\item Parallel POD algorithms
+			\item Implementation and Benchmarks
+			\item Integration in \texttt{EZyRB} with an example
+		\end{enumerate}
+		
+	\end{minipage}	
+
+
+	
+	
+\end{frame}
+
+\begin{frame}{Motivation}
+	\Large{\highlightB{Physical Problems}}
+	\normalsize
+	
+	Complex phenomena described using \highlightB{parametrized} \highlight{Partial Differential Equations (PDE)}
+	\begin{minipage}{\textwidth}
+		\vspace{0.5cm}
+		\centering
+		\begin{minipage}{0.25\textwidth}
+			\includegraphics[width=\textwidth]{img/DTMB_orig.png}
+			\centering
+			Naval Engineering
+		\end{minipage}\hspace{0.5cm}
+		\begin{minipage}{0.25\textwidth}\hspace{1cm}
+			\includegraphics[width=\textwidth]{img/wing.jpg}
+			\centering
+			Aeronautics
+		\end{minipage}\hspace{0.5cm}
+		\begin{minipage}{0.25\textwidth}\hspace{1cm}
+			\includegraphics[width=\textwidth]{img/automotive.png}
+			\centering
+			Automotive 
+		\end{minipage}
+		\vspace{0.5cm}
+	\end{minipage}
+
+	Solving the PDEs using fine discretization like \highlight{Finite Element}, \highlight{Finite Volume}, ...
+
+	\vspace{0.5cm}
+	\highlight{Problem:} Many evaluations are expensive.
+	\begin{itemize}
+		\item \highlight{optimizing} the parameter (\highlight{multi query} application)
+		\item \highlight{controlling} the parameter (\highlight{real time} application)
+	\end{itemize}
+
+
+	
+\end{frame}
+
+
+
+\input{slides/RB}
+
+\input{slides/POD}
+
+\input{slides/para}
+
+\input{slides/MPI}
+
+\input{slides/bench}
+
+\input{slides/EZyRB}
+

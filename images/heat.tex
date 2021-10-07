@@ -1,0 +1,35 @@
+\tikzset{
+	main/.style={black, line width=0.4mm, opacity=1},
+	second/.style={gray, opacity=5},
+	arrow/.style={-latex, shorten >=1ex, shorten <=1ex, bend angle=45}
+}
+\begin{tikzpicture}
+%% Grid
+
+
+\node (rect) at (3,3) [draw,main,minimum width=6cm,minimum height=6cm,  fill=blue!30] {};
+\draw (3,3) node[circle, main,minimum width=3cm,draw, fill=white] {};
+\draw (3,3) node[circle, main,minimum width=3cm,draw, fill=red!60] {};
+
+%\node (rect) at (3,3) [draw,main,minimum width=6cm,minimum height=6cm] {};
+%\draw (3,3) node[circle, main,minimum width=3cm,draw, fill=white] {};
+%\draw (3,3) node[circle, main,minimum width=3cm,draw] {};
+
+
+\draw (1,5) node {$\Omega_{2}$};
+\draw (2.5 , 3.5) node {$\Omega_{1}$};
+
+\draw (3 , 2) node {$\kappa = \mu_0$};
+\draw (2 , 1) node {$\kappa = 1$};
+
+\draw [arrow, main]  ( 3 , 3 ) to ( 4.15 , 4.15 );
+\draw (3.75 , 3.35) node {$ r_0 $};
+
+% Rand		
+\draw (3 , 6.5) node {$\Gamma_{top}$};
+\draw (3 , -0.5) node {$\Gamma_{base}$};
+\draw (-0.5 , 3) node {$\Gamma_{side}$};
+\draw (6.5 , 3) node {$\Gamma_{side}$};
+
+
+\end{tikzpicture}

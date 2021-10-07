@@ -1,0 +1,50 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.521in,
+height=3.566in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=0,
+xmax=132,
+xlabel style={font=\color{white!15!black}},
+xlabel={Number of Processors},
+ymin=0,
+ymax=14.2,
+ylabel style={font=\color{white!15!black}},
+ylabel={Speed up},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+legend style={at={(0.03,0.97)}, anchor=north west, legend cell align=left, align=left, draw=white!15!black}
+]
+
+\addplot [color=mycolor3, mark=+, mark options={solid, mycolor3}]
+table[row sep=crcr]{%
+1     0.926193820542935\\
+16    5.564527272810553\\
+32    8.253695032798474\\
+48    9.810377172379205\\
+64    10.85966997160303\\
+80    11.87933924922592\\
+96    12.30403623120082\\
+112   12.67579337348104\\
+128   13.13623736917454\\
+};
+%\addlegendentry{EZyRB}
+
+
+
+
+\end{axis}
+\end{tikzpicture}%

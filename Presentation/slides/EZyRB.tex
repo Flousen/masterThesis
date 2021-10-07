@@ -1,0 +1,118 @@
+\begin{frame}{EZyRB}
+	\Large{\highlightB{EZyRB: Easy Reduced Basis method}}
+	\normalsize
+	
+	\vspace{3mm} \hspace{82mm}
+	\begin{minipage}{0.25\textwidth}
+		\includegraphics[width=\textwidth]{img/logo_EZyRB_small.png}
+	\end{minipage}
+	\vspace{-28mm}\hspace{2mm}
+	\begin{itemize}
+		%\pause
+		\item Open source on \texttt{GitHub}
+		\item Data driven reduced order modeling framework \\ in python
+		\item POD with interpolation (PODI)
+	\end{itemize}
+
+	
+	
+\end{frame}
+
+\begin{frame}{EZyRB}
+	\Large{\highlightB{Example Heat Conduction}}
+	\normalsize
+	
+	\begin{minipage}[c]{5.5cm} 
+		\begin{equation*}
+		\begin{cases}
+		- \nabla \cdot (\kappa(x,\mu)\nabla u(x,\mu)) = 0 	& \text{in } \Omega 		\\
+		u(x,\mu) = 0 										& \text{on } \Gamma_{top} 	\\
+		\kappa(\mu)\nabla u(x,\mu)\cdot \mathbf{n} = 0 		& \text{on } \Gamma_{side} 	\\
+		\kappa(\mu)\nabla u(x,\mu)\cdot \mathbf{n} = \mu_1 	& \text{on } \Gamma_{base} 	\\
+		\end{cases}
+		\end{equation*}
+		\begin{align*}
+			&\text{find }u(\mu) \in \mathbb{X}:\\
+			&a(u(\mu),v;\mu) = f(v;\mu) \quad \forall v \in \mathbb{X}.
+		\end{align*}
+	\end{minipage}
+	\begin{minipage}[c]{5cm} 
+		\scalebox{0.75}{
+			\input{../images/heat}
+		}
+	\end{minipage}
+	\begin{align*}
+		a(u,v;\mu) = \int_{\Omega} \kappa(x,\mu)\nabla u(x,\mu) \nabla v(x) dx, 
+		\qquad
+		f(v;\mu) = \mu_1 \int_{\Gamma_{base}} v ~ ds
+ 	\end{align*}
+\end{frame}
+
+\begin{frame}{EZyRB}
+	\Large{\highlightB{Snapshots}}
+	\normalsize
+	
+	\begin{align*}
+	\Xi_{train}=
+	\left\{
+	\begin{pmatrix} 0.5 \\ -0.2 \end{pmatrix},
+	\begin{pmatrix} 8.6 \\  0.1 \end{pmatrix},
+	\begin{pmatrix} 5.3 \\  0.8 \end{pmatrix},
+	\begin{pmatrix} 9.4 \\  0.1 \end{pmatrix},
+	\begin{pmatrix} 7.3 \\ -0.8 \end{pmatrix},
+	\begin{pmatrix} 0.2 \\  0.8 \end{pmatrix},
+	\begin{pmatrix} 3.5 \\ -0.5 \end{pmatrix},
+	\begin{pmatrix} 0.3 \\  0.6 \end{pmatrix}
+	\right\}.
+	\end{align*}
+	
+	\includegraphics[width=\textwidth]{../images/snapshots}
+	
+	
+\end{frame}
+
+\begin{frame}{EZyRB}
+	\Large{\highlightB{Singular values}}
+	\normalsize
+	
+	\centering
+	\scalebox{0.75}{
+		\input{../images/EV}
+	}
+	
+\end{frame}
+
+
+\begin{frame}{EZyRB}
+	\Large{\highlightB{Conclusion}}
+	\normalsize
+
+	\begin{itemize}
+		\item We presented two algorithms to compute the POD in parallel
+		\item EVP perfomes better than SVD due to its limited number of operations
+		\item Distributing the snapshot matrix is a bottle neck
+		\item We presented hybrid parallel strategy for the POD
+	\end{itemize}	
+
+	\vspace{5mm}
+
+	\Large{\highlightB{Outlook}}
+	\normalsize
+	
+	\begin{itemize}
+		\item The performance of the computation of the \highlight{correlation matrix} could be improved by using graphics processing units (\highlight{GPU}).
+		\
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{EZyRB}
+	\Large{\highlightB{PODmodes}}
+	\normalsize
+	
+	
+	\includegraphics[width=\textwidth]{../images/PODmodes}
+	
+\end{frame}
+
+
+

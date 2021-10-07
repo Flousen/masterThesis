@@ -1,0 +1,81 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=4.521in,
+height=3.566in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=0,
+xmax=20,
+xlabel style={font=\color{white!15!black}},
+xlabel={nof porcessors},
+ymin=0,
+ymax=20,
+ylabel style={font=\color{white!15!black}},
+ylabel={speed up},
+axis background/.style={fill=white},
+title style={font=\bfseries},
+title={alg from paper[1]},
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=mycolor1]
+  table[row sep=crcr]{%
+1	1\\
+2	1.93381569098868\\
+3	2.83380557886777\\
+4	3.82678480058169\\
+5	4.63138625169243\\
+6	5.51433315924529\\
+7	6.10251014579889\\
+8	7.06828907362387\\
+9	7.51042196573799\\
+10	8.50567144524586\\
+11	9.03469871091825\\
+12	9.58661516924997\\
+13	10.5128497578629\\
+14	11.2227403309826\\
+15	11.9688775492298\\
+16	12.7159784935011\\
+17	13.4061873501317\\
+18	13.9274469205984\\
+19	14.5270529302017\\
+20	15.5249644925161\\
+};
+
+
+\addplot [color=mycolor2]
+  table[row sep=crcr]{%
+1	1\\
+2	2\\
+3	3\\
+4	4\\
+5	5\\
+6	6\\
+7	7\\
+8	8\\
+9	9\\
+10	10\\
+11	11\\
+12	12\\
+13	13\\
+14	14\\
+15	15\\
+16	16\\
+17	17\\
+18	18\\
+19	19\\
+20	20\\
+};
+
+
+\end{axis}
+\end{tikzpicture}%

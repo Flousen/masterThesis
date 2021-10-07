@@ -1,0 +1,177 @@
+\chapter{Numerical Results}
+In this Section the methods and algorithms introduced in the previous chapters will be evaluated and compared by using benchmarks.
+We will see an example using the best algorithm in an RB software.
+
+The numerical results and the implementation can be found on \texttt{GitLab}:\\ 
+\url{https://gitlab.com/Flousen/parallelpod}
+
+\section{Benchmarks}
+\label{sec:Benchmarks}
+\subsubsection{The cluster}
+The Benchmarks are done on the Sissa HPC cluster called Ulysses.
+It was inaugurated on September 24 in 2014. The cluster can operate with 100 teraflops and provides 34 million computing hours a year \cite{sissaHPC}.
+For the benchmarks in this Section, we use four nodes. 
+Every node has two processors with ten cores per processor and 160 gigabytes of ram.
+
+\subsubsection{Speedup}
+In the benchmarks, we compare the speedup of the different algorithms.
+The speedup is the factor of how much faster the algorithm is using multiple processors compared to the serial version.
+The optimum would be an algorithm where the factor is equal to the number of processors. 
+In the following plots this optimum is marked with a blue line.
+We measure the speedup by dividing the time the algorithm took with $n$ processors through time the algorithm took with serial version, since no concrete differences occur from the serial version.
+
+\subsubsection{Benchmarks}
+The computations are done with a random double matrix of the size $10^7 \times 300$ and using all the $300$ POD modes which mean no truncation.
+$10^7$ is a realistic value for $ \mathcal{ N }$ the degrees of freedom as well $300$ is a realistic value for $n_{train}$ the number of snapshots \cite{strazzullo2017model}.
+
+In the benchmarks we bind MPI processes to processors.
+So calling the program with two processes, we are using two cores, calling it with three processes we are using three cores and so on.
+%This is possible because the pure MPI implementation is not multithread and can only use one core. 
+
+%\subsection{Old bench mark without -0fast flag}
+%\begin{figure}[H]
+%    \centering
+%    \input{images/vergleich}
+%    \caption{Partitioning of the Snapshot Matrix for non blocking communication}
+%    \label{fig:vergleich}
+%\end{figure}
+
+\newpage
+\subsection{Comparison of the two algorithms}
+\label{sec:comparison}
+First, we compare 
+the algorithm using the SVD described in Section \ref{sec:paraSVD}
+with 
+the algorithm using the eigenvalue problem (EVP) described in Section \ref{sec:algsimp}.
+
+In Figure \ref{fig:bench1comm}, we compare the two algorithms in case the Snapshot matrix is not yet distributed to the processors.
+We simulate, the use case when all the snapshots are centralized into a single master process. 
+We can see that the speedup of the EVP algorithm reaches a maximum of $7$ at around 20 processors and is no longer growing.
+That means, at this point, adding more processors does not increase the speedup.
+
+The SVD algorithm performs worse than the EVP algorithm. We see nearly no speedup. For 80 processors, the speedup is $1.94$.
+
+\begin{figure}[H]
+	\centering
+	\input{images/bench1comm}
+	\caption{Speedup with communication}
+	\label{fig:bench1comm}
+\end{figure}
+\newpage
+
+Figure \ref{fig:bench1} shows the case, that the snapshot matrix is already distributed to the processors, as usually happens in a decomposed domain.
+
+In this case, we see both algorithms scale linearly. That means adding more processors increases the speedup for both processors.
+Both do not reach an optimal gradient of 1. The EVP algorithm has with $0.7$ a higher growth rate than the SVD  algorithm with $0.5$
+
+
+\begin{figure}[H]
+	\centering
+	\input{images/bench1}
+	\caption{Speedup without initial distribution of the snapshots.}
+	\label{fig:bench1}
+\end{figure}
+
+
+\newpage
+\subsection{Communication block size}
+In case the snapshot matrix is not distributed to the processors, we reach a very bad speedup.
+We try to speed up the computation in this case by overlapping the communication and the computation of the correlation matrix, as described in Section \ref{sec:nonBlockComm}. 
+\subsubsection{Best block size}
+In Subsection \ref{sec:nonBlockComm} we defined a block as a consecutive sequence of rows.
+The minimum block size is one row. 
+
+We try different block sizes to find the optimal block size.
+In Table \ref{table:BS}, one can see the overall time for different block sizes.
+We measured time for block sizes 10 to 500 in steps of 10 using 80 cores.
+We achieved the best overall time for the blocksizes $330$.
+
+\begin{table}[H]
+	\centering
+	\input{tbl/tableBS}
+	\caption{Overall time for different block sizes using 80 processors.}
+	\label{table:BS}
+\end{table}
+
+We selected a view block sizes from Table \ref{table:BS} and conducted benchmarks, to see how they perform in relation to speedup.
+The selected block sizes are marked red in Table \ref{table:BS}.
+We selected 40 because it is the first block size where the time is in the magnitude of two seconds.
+We selected 330 because it is the fastest block size.
+We selected 100, 200, 300, and 400 to see how speedup is developing.
+
+
+\begin{figure}[H]
+	\centering
+	\input{images/bench3}
+	\caption{Speedup for different block sizes }
+	\label{fig:bench3}
+\end{figure}
+
+Two things stand out in Figure \ref{fig:bench3}:
+\begin{enumerate}
+	\item All block sizes behave similarly up to 20 processors. 
+	\item None of the block sizes is faster than the algorithm with blocking communication.
+\end{enumerate}
+
+This shows that we don't gain any speed up with the approach using non blocking communication.
+Therefore, we investigate communications time respectively the waiting time.  
+\subsubsection{Communication time}
+We measure the waiting time in Algorithm \ref{alg:PPODnBlockComm} (line 4).
+We measure it for a block size $ bs = 300 $. 
+By measuring this we are measuring the waiting time we are not using for computations.
+We measured the waiting time for every block.
+In the appendix \ref{list:WTimeBS330} one can find the output of the measurement. We printed out the minimum and the maximum waiting time for every process.
+The mean minimum waiting time is $0.0062$ seconds and the mean maximum waiting time is $0.0263$ seconds. 
+The maximum waiting time is in the magnitude of 10 longer than the minimum waiting time.
+
+We explain the behavior by not knowing the structure of the cluster
+by assuming the true number of communications is congesting the cluster architecture.
+Even if the nodes are connected with a fast networking communications standard like InfiniBand, the communication will be slow if the data has traverse one or more nodes to get to its destination.
+
+Up to 20 processes this has no effect because we are working on one single node. This is the reason why in Figure \ref{fig:bench3} all block sizes behave similar up to 20 processes.
+
+For more than 20 processes we need communication with two or more nodes.
+We use the MPI\_Igather and MPI\_Iscatter functions; this leads to a slow down for all processes if the communication to one method is slow. 
+That is because the process that scatters the data is waiting to make sure that we are not working on a communication buffer.
+
+Possible solutions to this problem could be:
+\begin{itemize}
+	\item Find a strategy for the specific arrangement of the nodes, involving the global communications.
+	\item Make sure MPI\_Igather and MPI\_Iscatter are not blocking faster nodes.
+	For example replace gather/scatter with a master worker pattern that uses a MPI\_Isend and MPI\_Irevive for every block sent to any node. This would prevent that slow communication to some nodes slows down other nodes.
+\end{itemize}
+
+For our propose the overlapping of the communication and computations brought no improvements.
+
+\subsection{Hybrid implementation}
+\label{sec:hybrid}
+As we saw in the Section above, we spend a lot of time waiting for the communication to be finished.
+Using MPI, every communication between processes on the same node is copying data in the RAM.
+We can avoid these copying operations using a hybrid implementation.
+Hybrid means we are using MPI for the communication between the nodes and openMP for parallelization inside the node.
+Using OpenMP, we do not need copying operations inside the nodes because openMP is multithread with shared memory.
+
+On the Ulysses cluster, every node has two processors with ten cores.
+We reach the best results using one MPI process per processor, that means two MPI processes per node.
+With this configuration every MPI process is running on its processor and can make use of all ten cores using OpenMP.
+
+In Figure \ref{fig:bench5} you can see that the hybrid implementation is faster than the pure MPI implementation with a growing number of processors.
+The hybrid implementation does not reach a speedup maximum with 80 cores and  still grows.
+
+In Figure \ref{fig:bench5} you can see less dense measuring points for the speedup.
+This is because of the hybrid structure of the program. 
+We are creating benchmarks by increasing the number of MPI processes.
+In the hybrid implementation, every MPI processes can make use of ten cores.
+This is also the reason why the measuring points are in steps of ten processors for the hybrid implementation. 
+
+
+\begin{figure}[H]
+	\centering
+	\input{images/bench5}
+	\caption[speedup hybrid]{Speedup hybrid implementation MPI and OpenMP}
+	\label{fig:bench5}
+\end{figure}
+
+\newpage
+\input{chapters/ezyrb}
+

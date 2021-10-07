@@ -20,5 +20,21 @@ The proposed parallel implementation enables the exploitation of HPC supercomput
 The parallel algorithm is integrated into the reduced order modeling framework EZyRB, a framework for data-driven reduced order modeling, which has been exploited for the numerical results proposed in this work.
 
 
+## Acknowledgment
+This is a Masters's thesis at Ulm university written at *Scuola Internazionale Superiore di Studi Avanzati* (SISSA) in Trieste at the mathLab department.
+
+I want to thank Prof. Dr. Karsten Urban for providing contact to  Prof. Dr. Gianluigi Rozza, which made it possible to write the master thesis in Italy.
+
+And I want to thank Prof. Dr. GianIluigi Rozza for welcoming me at SISSA.
+I also want to thank him for moving me to a new office because of a nerve-wrecking sound that appeared after a few weeks at the first office.
+
+A special thanks to my supervisor Nicola Demo for always taking time to listen and help me with any problem.
+He continuously supported me and gave me good advice in my process of working on my thesis.
+And thanks for teaching me how to play briscola after lunch.
+
+Towards the end of my stay in Italy, I was confronted with challenges that came up with the coronavirus pandemic.
+I was disappointed that the coronavirus forced me to leave earlier as planned.
+But because I had to leave on short notice, I had to leave some of my things behind, which I am not particularly sad about since it gives me a reason to come back soon.
+
 
  

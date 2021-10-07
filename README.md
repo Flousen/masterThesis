@@ -2,3 +2,23 @@
 
 [Thesis](maFlorianKroetz.pdf)
 [Presentation](Presentation/mathlab_theme.pdf)
+
+## Abstract
+The goal of this master thesis is to present a parallel approach of the Proper Orthogonal Decomposition (POD) and to integrate it into a reduced order modeling framework.
+
+In the reduced-order modeling community, the POD is a popular snapshot-based method to obtain reduced basis functions.
+In most reduced-order molding frameworks, the computation of the POD is done in serial even though the snapshots are computed on distributed and parallel systems like HPC supercomputers.
+This leads to being the bottle-neck in many reduced order modeling frameworks, that can be solved by parallel implementation.
+
+For this master thesis, we took a look at two different approaches to compute the POD in parallel. 
+We compared a method using the singular value decomposition to a method solving the eigenvalue problem of the correlation matrix.
+The latter method has shown to be the best method in terms of computational cost and speedup.
+We were also able to increase the performance of the method by introducing a hybrid implementation combining a multithread with a multi-process paradigm.
+The proposed parallel implementation enables the exploitation of HPC supercomputers also for POD computation, and not only for the truth solutions.
+
+
+The parallel algorithm is integrated into the reduced order modeling framework EZyRB, a framework for data-driven reduced order modeling, which has been exploited for the numerical results proposed in this work.
+
+
+
+ 

@@ -7,7 +7,7 @@
 The goal of this master thesis is to present a parallel approach of the Proper Orthogonal Decomposition (POD) and to integrate it into a reduced order modeling framework.
 
 In the reduced-order modeling community, the POD is a popular snapshot-based method to obtain reduced basis functions.
-In most reduced-order molding frameworks, the computation of the POD is done in serial even though the snapshots are computed on distributed and parallel systems like HPC supercomputers.
+In most reduced-order modeling frameworks, the computation of the POD is done in serial even though the snapshots are computed on distributed and parallel systems like HPC supercomputers.
 This leads to being the bottle-neck in many reduced order modeling frameworks, that can be solved by parallel implementation.
 
 For this master thesis, we took a look at two different approaches to compute the POD in parallel. 
@@ -25,7 +25,7 @@ This is a Masters's thesis at Ulm university written at *Scuola Internazionale S
 
 I want to thank Prof. Dr. Karsten Urban for providing contact to  Prof. Dr. Gianluigi Rozza, which made it possible to write the master thesis in Italy.
 
-And I want to thank Prof. Dr. GianIluigi Rozza for welcoming me at SISSA.
+And I want to thank Prof. Dr. Gianluigi Rozza for welcoming me at SISSA.
 I also want to thank him for moving me to a new office because of a nerve-wrecking sound that appeared after a few weeks at the first office.
 
 A special thanks to my supervisor Nicola Demo for always taking time to listen and help me with any problem.
